@@ -2,15 +2,13 @@
 
 To reduce the search space of the brute force search we need to skip redundant
 codes. In order to do this we can take advantage of the invariance of the
-Fourier transform to rotation and translation. This means that 1D codes which
-are a translation of another code are redundant, and that 2D codes rotated are
-redundant.
+Fourier transform to translation. This means that codes which are a translation
+of another code are redundant.
 
-We need to figure out degerate codes due to:
-    four-fold rotation
-    flip across horizontal vertical or two-diagonal axes
+The following transformations are not redundant:
+    rotation
+    flips across any axis
 
-We can use the 1D Lyndon Words to reduce the search space for 1D codes.
 """
 
 import itertools
