@@ -4,22 +4,29 @@ Originally written by David Eppstein, October 2011. Taken from this Github Gist
 https://gist.github.com/dvberkel/1950267
 """
 
-__author__ = "David Eppstein"
+__author__ = "David Eppstein, Daniel Ching"
 __date__ = "October 2011"
 
 import unittest
 from raskar.moebius import moebius
 
 
-def LengthLimitedLyndonWords(s, n):
+def LengthLimitedLyndonWords(s, n, w=None):
     """Generate nonempty Lyndon words of length <= n over an s-symbol alphabet.
+
+    w is the starting Lyndon word. The default inital word is [0].
 
     The words are generated in lexicographic order, using an algorithm from
     J.-P. Duval, Theor. Comput. Sci. 1988, doi:10.1016/0304-3975(88)90113-2.
     As shown by Berstel and Pocchiola, it takes constant average time
     per generated word.
     """
-    w = [-1]  # set up for first increment
+    if w is None:
+        w = [0]
+    elif not isLyndonWord(w):
+        raise ValueError(f"The initial word must be a Lyndon word. "
+                         f"{w} is not a Lyndon word.")
+    w[-1] -= 1
     while w:
         w[-1] += 1  # increment the last non-z symbol
         yield w
