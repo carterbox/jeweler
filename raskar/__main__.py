@@ -48,8 +48,11 @@ def find_codes_lyndon(K, L, output_dir, density=0.5):
     num_allowed_ones = tuple(int(n * density) for n in range(L + 1))
     num_searched_codes = np.zeros(L + 1, dtype=int)
 
+    # Skip many codes by skipping to the longest one with the desired density.
+    w = [0] * (L - num_allowed_ones[-1]) + [1] * num_allowed_ones[-1]
+
     title = "Lyndon 1D {:d}-bit code".format(L)
-    for code in LengthLimitedLyndonWords(2, L):
+    for code in LengthLimitedLyndonWords(2, L, w):
         if len(code) >= K and np.sum(code) == num_allowed_ones[len(code)]:
             num_searched_codes[len(code)] += 1
             score = cost_function(code)

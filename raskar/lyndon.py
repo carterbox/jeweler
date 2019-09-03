@@ -23,9 +23,7 @@ def LengthLimitedLyndonWords(s, n, w=None):
     """
     if w is None:
         w = [0]
-    elif not isLyndonWord(w):
-        raise ValueError(f"The initial word must be a Lyndon word. "
-                         f"{w} is not a Lyndon word.")
+    assert isLyndonWord(w), f"{w} is not a Lyndon word."
     w[-1] -= 1
     while w:
         w[-1] += 1  # increment the last non-z symbol
