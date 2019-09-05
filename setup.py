@@ -9,6 +9,7 @@ setup(
         'numpy',
         'tqdm',
     ],
+    python_requires='>=3.6',
     entry_points='''
         [console_scripts]
         jeweler=jeweler.cli:cli
