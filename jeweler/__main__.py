@@ -21,7 +21,7 @@ import click
 import numpy as np
 from tqdm import tqdm
 
-from raskar.lyndon import LengthLimitedLyndonWords
+from jeweler.lyndon import LengthLimitedLyndonWords
 
 
 def cost_function(code):

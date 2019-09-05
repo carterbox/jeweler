@@ -8,7 +8,7 @@ __author__ = "David Eppstein, Daniel Ching"
 __date__ = "October 2011"
 
 import unittest
-from raskar.moebius import moebius
+from jeweler.moebius import moebius
 
 
 def LengthLimitedLyndonWords(s, n, w=None):
