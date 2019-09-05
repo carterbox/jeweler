@@ -27,18 +27,7 @@ __all__ = [
 ]
 
 
-def cost_function(code):
-    """Return the quality of a code. Larger is better.
-
-    We chose a code that (i) maximizes the minimum of the magnitude of the DFT
-    values and (ii) minimizes the variance of the DFT values. Using a rating
-    parameter, score = magnitude - variance.
-    """
-    dft = np.fft.rfft(code)
-    return np.min(np.abs(dft)) - np.var(dft)
-
-
-def find_codes_lyndon(K, L, output_dir, density=0.5):
+def find_codes_lyndon(K, L, output_dir, objective_function, density=0.5):
     """Search 1D binary Lyndon words of K <= length <= L for the best codes.
 
     For the 32-bit space, searching only Lydon words reduces the search space
@@ -58,7 +47,7 @@ def find_codes_lyndon(K, L, output_dir, density=0.5):
     for code in LengthLimitedLyndonWords(2, L, w):
         if len(code) >= K and np.sum(code) == num_allowed_ones[len(code)]:
             num_searched_codes[len(code)] += 1
-            score = cost_function(code)
+            score = objective_function(code)
             if score > score_best[len(code)]:
                 score_best[len(code)] = score
                 filename = os.path.join(output_dir, f"{len(code)}.txt")
@@ -83,6 +72,7 @@ def find_codes_bfs(L, density=0.5, batch_size=2**25, filename=None):
     filename: string
         The name of a file to dump the best result at the completion of every
         batch.
+
     """
     k = int(L * density)  # number of 1s in the code
     code_generator = itertools.combinations(range(L), k)

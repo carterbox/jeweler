@@ -7,6 +7,7 @@ import time
 import click
 
 from jeweler.search import *
+from jeweler.objective import *
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -27,9 +28,11 @@ def cli(length_min, length_max, output_dir):
     LENGTH.txt. Restart previous searches from the best code on file.
     """
     before = time.time()
-    find_codes_lyndon(length_min,
-                      length_max,
-                      output_dir=os.path.join(output_dir,
-                                              f"lyndon-{length_max}"))
+    find_codes_lyndon(
+        length_min,
+        length_max,
+        output_dir=os.path.join(output_dir, f"lyndon-{length_max}"),
+        objective_function=minimal_variance,
+    )
     after = time.time()
     logger.info(f"This search took {after - before} seconds.")
