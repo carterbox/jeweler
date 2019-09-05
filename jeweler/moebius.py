@@ -1,5 +1,6 @@
 """This code is contributed by Manish Shaw(manishshaw1)"""
 
+
 def is_prime(n):
     """Check if n is prime or not."""
     if (n < 2):
@@ -40,6 +41,7 @@ def moebius(N):
         return -1
     else:
         return 1
+
 
 if __name__ == '__main__':
     print("Mobius defs M(N) at N = {} is: {}".format(17, mobius(17)), end="\n")

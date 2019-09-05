@@ -8,6 +8,7 @@ __author__ = "David Eppstein, Daniel Ching"
 __date__ = "October 2011"
 
 import unittest
+
 from jeweler.moebius import moebius
 
 
