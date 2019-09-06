@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 @click.argument('length_max', type=int, default=16)
 @click.option('-o',
               '--output-dir',
-              default='best_codes',
+              default='best_codes.json',
               type=click.Path(exists=False),
               help='Put the search results here.')
 @click.option('-s',
@@ -41,7 +41,7 @@ def cli(length_min, length_max, output_dir, search_method, objective_function):
     getattr(jeweler.search, search_method)(
         length_min,
         length_max,
-        output_dir=os.path.join(output_dir, f"{search_method}-{length_max}"),
+        output_dir=output_dir,
         objective_function=getattr(jeweler.objective, objective_function),
     )
     after = time.time()

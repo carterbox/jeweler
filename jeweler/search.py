@@ -21,6 +21,7 @@ import numpy as np
 from tqdm import tqdm
 
 from jeweler.lyndon import LengthLimitedLyndonWords
+from jeweler.io import Archiver
 
 __all__ = [
     'lyndon',
@@ -58,7 +59,6 @@ def lyndon(K, L, output_dir, objective_function, density=0.5):
     """
     logger.info(f"Method is Lyndon; "
                 f"objective is {objective_function.__name__}.")
-    os.makedirs(output_dir, exist_ok=True)
 
     # Stats are L + 1 to avoid repeated subtraction inside search loop
     score_best = np.full(L + 1, -np.inf, dtype=np.float32)
@@ -68,25 +68,14 @@ def lyndon(K, L, output_dir, objective_function, density=0.5):
     # Skip many codes by skipping to the longest one with the desired density.
     w = [0] * (L - num_allowed_ones[-1]) + [1] * num_allowed_ones[-1]
 
-    title = "Lyndon 1D {:d}-bit code".format(L)
+    f = Archiver(filename=output_dir)
     for code in LengthLimitedLyndonWords(2, L, w):
         if len(code) >= K and np.sum(code) == num_allowed_ones[len(code)]:
             num_searched_codes[len(code)] += 1
             score = objective_function(code)
             if score > score_best[len(code)]:
                 score_best[len(code)] = score
-                filename = os.path.join(output_dir, f"{len(code)}.txt")
-                with open(filename, mode='w', encoding='utf-8') as f:
-                    report = (
-                        f"# Best code from searching "
-                        f"{num_searched_codes[len(code)]:,d} Lyndon codes"
-                        f"\n{code}\n{score}"
-                    )
-                    logger.debug(report)
-                    print(
-                        report,
-                        file=f,
-                    )
+                f.update(objective_function.__name__, code, score)
 
 
 def bfs(L, density=0.5, batch_size=2**25, filename=None):
