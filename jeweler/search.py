@@ -14,6 +14,7 @@ We can use the 1D Lyndon Words to reduce the search space for 1D codes.
 """
 
 import itertools
+import logging
 import os
 
 import numpy as np
@@ -26,6 +27,8 @@ __all__ = [
     'find_codes_bfs',
 ]
 
+logger = logging.getLogger(__name__)
+
 
 def find_codes_lyndon(K, L, output_dir, objective_function, density=0.5):
     """Search 1D binary Lyndon words of K <= length <= L for the best codes.
@@ -33,6 +36,8 @@ def find_codes_lyndon(K, L, output_dir, objective_function, density=0.5):
     For the 32-bit space, searching only Lydon words reduces the search space
     to only 3.12% of the full search space.
     """
+    logger.info(f"Method is Lyndon; "
+                f"objective is {objective_function.__name__}.")
     os.makedirs(output_dir, exist_ok=True)
 
     # Stats are L + 1 to avoid repeated subtraction inside search loop
@@ -52,10 +57,14 @@ def find_codes_lyndon(K, L, output_dir, objective_function, density=0.5):
                 score_best[len(code)] = score
                 filename = os.path.join(output_dir, f"{len(code)}.txt")
                 with open(filename, mode='w', encoding='utf-8') as f:
+                    report = (
+                        f"# Best code from searching "
+                        f"{num_searched_codes[len(code)]:,d} Lyndon codes"
+                        f"\n{code}\n{score}"
+                    )
+                    logger.debug(report)
                     print(
-                        f"# Best code from searching",
-                        f"{num_searched_codes[len(code)]:,d} Lyndon codes",
-                        f"\n{code}\n{score}",
+                        report,
                         file=f,
                     )
 
