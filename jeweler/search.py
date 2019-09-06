@@ -23,14 +23,34 @@ from tqdm import tqdm
 from jeweler.lyndon import LengthLimitedLyndonWords
 
 __all__ = [
-    'find_codes_lyndon',
-    'find_codes_bfs',
+    'lyndon',
+    'bfs',
 ]
 
 logger = logging.getLogger(__name__)
 
 
-def find_codes_lyndon(K, L, output_dir, objective_function, density=0.5):
+def _find_codes_prototype(K, L, output_dir, objective_function, density):
+    """Search module expects a function with this signature.
+
+    Parameters
+    ----------
+    K : int
+        The minimimum code length inclusive
+    L : int
+        The maximum code length inclusive
+    output_dir : path
+        Location to put the output files
+    objective_function : function
+        A function from jeweler.objective where better scores are larger
+    density : float
+        The sum of the code divided by the length of the code
+
+    """
+    pass
+
+
+def lyndon(K, L, output_dir, objective_function, density=0.5):
     """Search 1D binary Lyndon words of K <= length <= L for the best codes.
 
     For the 32-bit space, searching only Lydon words reduces the search space
@@ -69,7 +89,7 @@ def find_codes_lyndon(K, L, output_dir, objective_function, density=0.5):
                     )
 
 
-def find_codes_bfs(L, density=0.5, batch_size=2**25, filename=None):
+def bfs(L, density=0.5, batch_size=2**25, filename=None):
     """Find the best binary code of length L using a brute force search.
 
     Parameters
