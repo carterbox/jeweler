@@ -33,7 +33,8 @@ strategies.
 
 import logging
 
-from jeweler.search import *
+from jeweler.catalog import *
 from jeweler.objective import *
+from jeweler.search import *
 
 logging.getLogger(__name__).addHandler(logging.NullHandler())

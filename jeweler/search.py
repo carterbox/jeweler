@@ -71,14 +71,15 @@ def lyndon(K, L, output_dir, objective_function, density=0.5):
     # Skip many codes by skipping to the longest one with the desired density.
     w = [0] * (L - num_allowed_ones[-1]) + [1] * num_allowed_ones[-1]
 
-    f = Archiver(filename=output_dir)
+    f = Archiver(output_dir=output_dir)
     for code in LengthLimitedLyndonWords(2, L, w):
         if len(code) >= K and np.sum(code) == num_allowed_ones[len(code)]:
             num_searched_codes[len(code)] += 1
             score = objective_function(code)
             if score > score_best[len(code)]:
                 score_best[len(code)] = score
-                f.update(objective_function.__name__, code, score)
+                f.update(objective_function.__name__, code, score,
+                         weight=num_allowed_ones[len(code)])
 
 
 def bfs(L, density=0.5, batch_size=2**25, filename=None):

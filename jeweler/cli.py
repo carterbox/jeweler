@@ -6,8 +6,9 @@ import time
 
 import click
 
-import jeweler.search
+import jeweler.catalog
 import jeweler.objective
+import jeweler.search
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -18,7 +19,7 @@ logger = logging.getLogger(__name__)
 @click.argument('length_max', type=int, default=16)
 @click.option('-o',
               '--output-dir',
-              default='best_codes.json',
+              default=os.path.dirname(jeweler.catalog.__file__),
               type=click.Path(exists=False),
               help='Put the search results here.')
 @click.option('-s',
