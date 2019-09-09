@@ -32,12 +32,9 @@ logger = logging.getLogger(__name__)
 
 class NotInCatalogError(ValueError):
     """Raised when a code does not exist in the catalog."""
-
     def __init__(self, L, weight, objective_function):
-        message = (
-            f"{weight}/{L} codes have not been evaluated "
-            f"with '{objective_function}'."
-        )
+        message = (f"{weight}/{L} codes have not been evaluated "
+                   f"with '{objective_function}'.")
         super(NotInCatalogError, self).__init__(message)
 
 
@@ -52,7 +49,6 @@ class Archiver(object):
         How often to write to the disk
 
     """
-
     def __init__(self, output_dir):
         """Set up an Archiver instance."""
         self.output_dir = os.path.abspath(output_dir)

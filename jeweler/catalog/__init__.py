@@ -6,7 +6,7 @@ import os
 from jeweler.io import Archiver
 
 __all__ = [
-    'best'
+    'best',
 ]
 
 
@@ -20,7 +20,7 @@ def best(L, objective_function, weight):
     return f.fetch(
         L=L,
         objective_function=objective_function,
-        weight=weight
+        weight=weight,
     )['code']
 
 

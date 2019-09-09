@@ -57,11 +57,9 @@ def lyndon(K, L, output_dir, objective_function, density=0.5):
     For the 32-bit space, searching only Lydon words reduces the search space
     to only 3.12% of the full search space.
     """
-    logger.info(
-        f"Method is Lyndon; "
-        f"objective is {objective_function.__name__}; "
-        f"searching lengths from {K} including {L}. "
-    )
+    logger.info(f"Method is Lyndon; "
+                f"objective is {objective_function.__name__}; "
+                f"searching lengths from {K} including {L}. ")
 
     # Stats are L + 1 to avoid repeated subtraction inside search loop
     score_best = np.full(L + 1, -np.inf, dtype=np.float32)
@@ -78,7 +76,9 @@ def lyndon(K, L, output_dir, objective_function, density=0.5):
             score = objective_function(code)
             if score > score_best[len(code)]:
                 score_best[len(code)] = score
-                f.update(objective_function.__name__, code, score,
+                f.update(objective_function.__name__,
+                         code,
+                         score,
                          weight=num_allowed_ones[len(code)])
 
 

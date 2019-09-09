@@ -19,16 +19,20 @@ API Structure
 -------------
 
 Jeweler has a command line interface (CLI) for convenience. This API is defined
-in the cli module, and it is called from the __main__ module if Jeweler is
-invoked using the Python module option or directly if Jeweler is installed to
-the PATH.
+in the `cli` module which called from the `__main__` module if Jeweler is called
+directly using `python -m jeweler` or `jeweler` if Jeweler is installed to the
+PATH.
 
-The objective module contains the available objective functions which codes are
-evaluated against.
+The `catalog` module contains already computed best codes using the included
+cost functions. This catalog may be searched using the `best` function.
 
-The search module contains functions which orchestrate various search
+The `io` module contains a class for saving and fetching codes to/from the disk.
+
+The `objective` module contains the available objective functions which codes
+are evaluated against.
+
+The `search` module contains functions which orchestrate various search
 strategies.
-
 """
 
 import logging
