@@ -6,8 +6,9 @@ import time
 
 import click
 
-import jeweler.search
+import jeweler.catalog
 import jeweler.objective
+import jeweler.search
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -18,7 +19,7 @@ logger = logging.getLogger(__name__)
 @click.argument('length_max', type=int, default=16)
 @click.option('-o',
               '--output-dir',
-              default='best_codes.json',
+              default=os.path.dirname(jeweler.catalog.__file__),
               type=click.Path(exists=False),
               help='Put the search results here.')
 @click.option('-s',
@@ -32,10 +33,10 @@ logger = logging.getLogger(__name__)
               type=click.Choice(jeweler.objective.__all__),
               help='Use this function to score codes.')
 def cli(length_min, length_max, output_dir, search_method, objective_function):
-    """Find the best binary sequences LENGTH_MIN...LENGTH_MAX.
+    """Find the best binary sequences LENGTH_MIN..LENGTH_MAX.
 
-    Save the best sequence for each length in a unique text file named
-    LENGTH.txt. Restart previous searches from the best code on file.
+    Save the best sequence for each length in a unique file named
+    LENGTH.json. Restart previous searches from the best code on file.
     """
     before = time.time()
     getattr(jeweler.search, search_method)(
