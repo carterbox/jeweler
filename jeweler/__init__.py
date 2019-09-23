@@ -1,9 +1,9 @@
 """Jeweler is a module for finding sequences optimized for coded aperture.
 
 Coded aperature imaging is a computational imaging technique in which light
-fields are filtered with some kind of modulating device for interacting the
-detector. The modulating pattern makes the inverse problem easier to solve by
-reducing the number of possible solutions.
+fields are filtered with some kind of modulating device before interacting with
+the detector. The modulating pattern makes the inverse problem easier to solve
+by reducing the number of possible solutions.
 
 Not every light modulating code/sequence is equally effective. Each code
 improves the recovery of only a finite number of spatial frequencies. It
@@ -14,6 +14,11 @@ This package provides a framework for testing all of the codes of a requested
 length and weight/density against an objective function as efficiently as
 possible. The main strategy it employs is targeting the shift invariance of the
 Fourier tranform.
+
+A combinatoric necklace is a representative of an equivalence class representing
+all of the circular shifts of sequence. By only testing combinatoric necklaces,
+we significantly reduce the search space.
+
 
 API Structure
 -------------
