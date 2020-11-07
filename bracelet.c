@@ -15,8 +15,6 @@ cell avail[50];
 element B[50]; // run length encoding data structure
 int nb = 0;    // number of blocks
 int num[50], a[50], run[50];
-const int n = 5;
-const int k = 3;
 int total, head, NECK = 1, LYN = 0;
 
 /*-----------------------------------------------------------*/
@@ -32,7 +30,7 @@ void ListRemove(int i) {
   avail[n].prev = p;
 }
 
-void ListAdd(int i) {
+void ListAdd(int i, const int k) {
   int p, n;
 
   p = avail[i].prev;
@@ -47,7 +45,7 @@ int ListNext(int i) { return avail[i].next; }
 
 /*-----------------------------------------------------------*/
 
-void Print(int p) {
+void Print(int p, const int n) {
   int j;
   if (NECK && n % p != 0)
     return;
@@ -102,7 +100,7 @@ int CheckRev() {
 
 /*-----------------------------------------------------------*/
 
-void Gen(int t, int p, int r, int z, int b, int RS) {
+void Gen(int t, int p, int r, int z, int b, int RS, const int n, const int k) {
   int j, z2, p2, c;
   // Incremental comparison of a[r+1...n] with its reversal
   if (t - 1 > (n - r) / 2 + r) {
@@ -120,7 +118,7 @@ void Gen(int t, int p, int r, int z, int b, int RS) {
     if (num[k] > 0 && t != r + 1 && (B[b + 1].s != k || B[b + 1].v < num[k]))
       RS = FALSE;
     if (RS == FALSE)
-      Print(p);
+      Print(p, n);
   }
   // Recursively extend the prenecklace - unless only 0s remain to be appended
   else if (num[1] != n - t + 1) {
@@ -140,11 +138,11 @@ void Gen(int t, int p, int r, int z, int b, int RS) {
         p2 = t;
       c = CheckRev();
       if (c == 0)
-        Gen(t + 1, p2, t, z2, nb, FALSE);
+        Gen(t + 1, p2, t, z2, nb, FALSE, n, k);
       if (c == 1)
-        Gen(t + 1, p2, r, z2, b, RS);
+        Gen(t + 1, p2, r, z2, b, RS, n, k);
       if (num[j] == 0)
-        ListAdd(j);
+        ListAdd(j, k);
       num[j]++;
       RestoreRunLength();
       j = ListNext(j);
@@ -155,7 +153,7 @@ void Gen(int t, int p, int r, int z, int b, int RS) {
 
 /*-----------------------------------------------------------*/
 
-void BraceletFC() {
+void BraceletFC(const int n, const int k) {
   int j;
   for (j = k + 1; j >= 0; j--) {
     avail[j].next = j - 1;
@@ -173,21 +171,21 @@ void BraceletFC() {
     ListRemove(1);
   B[0].s = 0;
   UpdateRunLength(1);
-  Gen(2, 1, 1, 2, 1, FALSE);
+  Gen(2, 1, 1, 2, 1, FALSE, n, k);
   printf("Total = %d\n", total);
 }
 
 int main() {
-//   printf("Enter n (bracelet length) k (number of colors): ");
-//   scanf("%d %d", &n, &k);
-//   for (int j = 1; j <= k; j++) {
-//     printf(" enter # of %d’s: ", j - 1);
-//     scanf("%d", &num[j]);
-//   }
-//   n = 5;
-//   k = 3;
-  num[0] = 1;
-  num[1] = 2;
-  num[2] = 3;
-  BraceletFC();
+  //   printf("Enter n (bracelet length) k (number of colors): ");
+  //   scanf("%d %d", &n, &k);
+  //   for (int j = 1; j <= k; j++) {
+  //     printf(" enter # of %d’s: ", j - 1);
+  //     scanf("%d", &num[j]);
+  //   }
+  const int n = 6;
+  const int k = 3;
+  num[1] = 3;
+  num[2] = 2;
+  num[3] = 1;
+  BraceletFC(n, k);
 }
