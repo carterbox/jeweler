@@ -4,6 +4,8 @@
 
 #define TRUE 1
 #define FALSE 0
+#define NECK 1
+#define LYN 0
 
 #define MAX_LENGTH 64
 
@@ -20,7 +22,7 @@ cell avail[MAX_LENGTH];
 element B[MAX_LENGTH]; // run length encoding data structure
 int nb = 0;            // number of blocks
 int a[MAX_LENGTH], run[MAX_LENGTH];
-int total, head, NECK = 1, LYN = 0;
+int total, head;
 
 /*-----------------------------------------------------------*/
 
