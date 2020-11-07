@@ -157,8 +157,8 @@ void Gen(int t, int p, int r, int z, int b, int RS, const int n, const int k,
 /*-----------------------------------------------------------*/
 
 void BraceletFC(const int n, // the length of the bracelet
-                const int k, // the number of unique colors in the bracelet
-                int *num     // the number of each color in the bracelet
+                const int k, // the number of unique colors
+                int *num     // the number of each color; start filling at 1
 ) {
   int j;
   for (j = k + 1; j >= 0; j--) {
@@ -182,17 +182,13 @@ void BraceletFC(const int n, // the length of the bracelet
 }
 
 int main() {
-  //   printf("Enter n (bracelet length) k (number of colors): ");
-  //   scanf("%d %d", &n, &k);
-  //   for (int j = 1; j <= k; j++) {
-  //     printf(" enter # of %d’s: ", j - 1);
-  //     scanf("%d", &num[j]);
-  //   }
-  const int n = 6;
-  const int k = 3;
+  int n, k;
   int num[MAX_LENGTH];
-  num[1] = 3;
-  num[2] = 2;
-  num[3] = 1;
+  printf("Enter n (bracelet length) k (number of colors): ");
+  scanf("%d %d", &n, &k);
+  for (int j = 1; j <= k; j++) {
+    printf(" enter # of %d’s: ", j - 1);
+    scanf("%d", &num[j]);
+  }
   BraceletFC(n, k, num);
 }
