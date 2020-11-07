@@ -2,6 +2,8 @@
 #define TRUE 1
 #define FALSE 0
 
+#define MAX_LENGTH 64
+
 typedef struct cell {
   int next, prev;
 } cell;
@@ -10,11 +12,11 @@ typedef struct element {
   int s, v;
 } element;
 
-cell avail[50];
+cell avail[MAX_LENGTH];
 
-element B[50]; // run length encoding data structure
-int nb = 0;    // number of blocks
-int num[50], a[50], run[50];
+element B[MAX_LENGTH]; // run length encoding data structure
+int nb = 0;            // number of blocks
+int a[MAX_LENGTH], run[MAX_LENGTH];
 int total, head, NECK = 1, LYN = 0;
 
 /*-----------------------------------------------------------*/
@@ -100,7 +102,8 @@ int CheckRev() {
 
 /*-----------------------------------------------------------*/
 
-void Gen(int t, int p, int r, int z, int b, int RS, const int n, const int k) {
+void Gen(int t, int p, int r, int z, int b, int RS, const int n, const int k,
+         int *num) {
   int j, z2, p2, c;
   // Incremental comparison of a[r+1...n] with its reversal
   if (t - 1 > (n - r) / 2 + r) {
@@ -138,9 +141,9 @@ void Gen(int t, int p, int r, int z, int b, int RS, const int n, const int k) {
         p2 = t;
       c = CheckRev();
       if (c == 0)
-        Gen(t + 1, p2, t, z2, nb, FALSE, n, k);
+        Gen(t + 1, p2, t, z2, nb, FALSE, n, k, num);
       if (c == 1)
-        Gen(t + 1, p2, r, z2, b, RS, n, k);
+        Gen(t + 1, p2, r, z2, b, RS, n, k, num);
       if (num[j] == 0)
         ListAdd(j, k);
       num[j]++;
@@ -153,7 +156,10 @@ void Gen(int t, int p, int r, int z, int b, int RS, const int n, const int k) {
 
 /*-----------------------------------------------------------*/
 
-void BraceletFC(const int n, const int k) {
+void BraceletFC(const int n, // the length of the bracelet
+                const int k, // the number of unique colors in the bracelet
+                int *num     // the number of each color in the bracelet
+) {
   int j;
   for (j = k + 1; j >= 0; j--) {
     avail[j].next = j - 1;
@@ -171,7 +177,7 @@ void BraceletFC(const int n, const int k) {
     ListRemove(1);
   B[0].s = 0;
   UpdateRunLength(1);
-  Gen(2, 1, 1, 2, 1, FALSE, n, k);
+  Gen(2, 1, 1, 2, 1, FALSE, n, k, num);
   printf("Total = %d\n", total);
 }
 
@@ -184,8 +190,9 @@ int main() {
   //   }
   const int n = 6;
   const int k = 3;
+  int num[MAX_LENGTH];
   num[1] = 3;
   num[2] = 2;
   num[3] = 1;
-  BraceletFC(n, k);
+  BraceletFC(n, k, num);
 }
