@@ -9,6 +9,9 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 project(jeweler LANGUAGES C CXX)
 
+# Add 'src' to install path so compiled modules go to the right place
+file(TO_NATIVE_PATH "${CMAKE_INSTALL_PREFIX}/src" CMAKE_INSTALL_PREFIX)
+
 include_directories(include)
-add_subdirectory(c)
-add_subdirectory(pybind11)
+add_subdirectory(src)
+
