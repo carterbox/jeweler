@@ -1,4 +1,3 @@
-
 #pragma once
 
 void BraceletFC(const int n, // the length of the bracelet
