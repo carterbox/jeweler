@@ -188,10 +188,12 @@ int main() {
   int n, k;
   int num[MAX_LENGTH];
   printf("Enter n (bracelet length) k (number of colors): ");
-  scanf("%d %d", &n, &k);
+  if (scanf("%d %d", &n, &k) != 2)
+    return 1;
   for (int j = 1; j <= k; j++) {
     printf(" enter # of %d’s: ", j - 1);
-    scanf("%d", &num[j]);
+    if (scanf("%d", &num[j]) != 1)
+      return 1;
   }
   BraceletFC(n, k, num);
 }
