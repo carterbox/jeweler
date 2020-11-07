@@ -1,4 +1,7 @@
 #include <stdio.h>
+
+#include "bracelet.h"
+
 #define TRUE 1
 #define FALSE 0
 
