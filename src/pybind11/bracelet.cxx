@@ -3,7 +3,7 @@
 #include <pybind11/stl.h>
 #include <vector>
 
-#include "bracelet.h"
+#include "bracelet.hxx"
 
 using namespace pybind11::literals;
 
@@ -26,9 +26,10 @@ PYBIND11_MODULE(bracelet, m) {
         if (total != n) {
           throw std::invalid_argument("The sum of counts must be n.");
         }
-        BraceletFC(n, k, num);
+        auto bracelets = BraceletFC(n, k, num);
+        return bracelets;
       },
-      R"(Print all bracelets of fixed content using method by Karim et al.
+      R"(Return all bracelets of fixed content using method by Karim et al.
 
     Parameters
     ----------
@@ -38,6 +39,11 @@ PYBIND11_MODULE(bracelet, m) {
         The number of unique colors in the bracelet.
     counts : [int]
         The number of each unique color.
+
+    Returns
+    -------
+    bracelets : [[int]]
+      A list of the bracelets.
 
     References
     ----------
