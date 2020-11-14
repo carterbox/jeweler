@@ -1,3 +1,8 @@
+// This module is a modified version of the code in the appendix of:
+// Karim, S., J. Sawada, Z. Alamgir, and S. M. Husnine. 2013. “Generating
+// Bracelets with Fixed Content.” Theoretical Computer Science 475: 103–12.
+// https://doi.org/10.1016/j.tcs.2012.11.024.
+
 #include <stdio.h>
 
 #include "bracelet.h"
