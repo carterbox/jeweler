@@ -4,6 +4,7 @@
 // https://doi.org/10.1016/j.tcs.2012.11.024.
 
 #include <stdio.h>
+#include <vector>
 
 #include "bracelet.h"
 
@@ -27,7 +28,7 @@ cell avail[MAX_LENGTH];
 element B[MAX_LENGTH]; // run length encoding data structure
 int nb = 0;            // number of blocks
 int a[MAX_LENGTH], run[MAX_LENGTH];
-int total, head;
+int head;
 
 /*-----------------------------------------------------------*/
 
@@ -57,16 +58,17 @@ int ListNext(int i) { return avail[i].next; }
 
 /*-----------------------------------------------------------*/
 
-void Print(int p, const int n) {
+void Print(int p, const int n, std::vector<int *> &wrist) {
   int j;
   if (NECK && n % p != 0)
     return;
   if (LYN && n != p)
     return;
-  for (j = 1; j <= n; j++)
-    printf("%d ", a[j] - 1);
-  printf("\n");
-  total++;
+  int *bracelet = new int[n];
+  for (j = 1; j <= n; j++) {
+    bracelet[j - 1] = a[j] - 1;
+  }
+  wrist.push_back(bracelet);
 }
 
 /*-----------------------------------------------------------*/
@@ -113,7 +115,7 @@ int CheckRev() {
 /*-----------------------------------------------------------*/
 
 void Gen(int t, int p, int r, int z, int b, int RS, const int n, const int k,
-         int *num) {
+         int *num, std::vector<int *> &wrist) {
   int j, z2, p2, c;
   // Incremental comparison of a[r+1...n] with its reversal
   if (t - 1 > (n - r) / 2 + r) {
@@ -131,7 +133,7 @@ void Gen(int t, int p, int r, int z, int b, int RS, const int n, const int k,
     if (num[k] > 0 && t != r + 1 && (B[b + 1].s != k || B[b + 1].v < num[k]))
       RS = FALSE;
     if (RS == FALSE)
-      Print(p, n);
+      Print(p, n, wrist);
   }
   // Recursively extend the prenecklace - unless only 0s remain to be appended
   else if (num[1] != n - t + 1) {
@@ -151,9 +153,9 @@ void Gen(int t, int p, int r, int z, int b, int RS, const int n, const int k,
         p2 = t;
       c = CheckRev();
       if (c == 0)
-        Gen(t + 1, p2, t, z2, nb, FALSE, n, k, num);
+        Gen(t + 1, p2, t, z2, nb, FALSE, n, k, num, wrist);
       if (c == 1)
-        Gen(t + 1, p2, r, z2, b, RS, n, k, num);
+        Gen(t + 1, p2, r, z2, b, RS, n, k, num, wrist);
       if (num[j] == 0)
         ListAdd(j, k);
       num[j]++;
@@ -180,15 +182,24 @@ void BraceletFC(const int n, // the length of the bracelet
     a[j] = k;
     run[j] = 0;
   }
-  total = 0;
   a[1] = 1;
   num[1]--;
   if (num[1] == 0)
     ListRemove(1);
   B[0].s = 0;
   UpdateRunLength(1);
-  Gen(2, 1, 1, 2, 1, FALSE, n, k, num);
-  printf("Total = %d\n", total);
+  std::vector<int *> wrist;
+
+  Gen(2, 1, 1, 2, 1, FALSE, n, k, num, wrist);
+
+  printf("Total = %d\n", wrist.size());
+  for (int i = 0; i < wrist.size(); i++) {
+    for (j = 0; j < n; j++) {
+      printf("%d ", wrist[i][j]);
+    }
+    printf("\n");
+  }
+  wrist.clear();
 }
 
 int main() {

@@ -3,9 +3,7 @@
 #include <pybind11/stl.h>
 #include <vector>
 
-extern "C" {
 #include "bracelet.h"
-}
 
 using namespace pybind11::literals;
 
