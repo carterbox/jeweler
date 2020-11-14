@@ -5,9 +5,8 @@ cmake_minimum_required(VERSION 3.11.0)
 # pybind11 requires the 11 standard or newer
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
 
-project(jeweler LANGUAGES C CXX)
+project(jeweler LANGUAGES CXX)
 
 # Add 'src' to install path so compiled modules go to the right place
 file(TO_NATIVE_PATH "${CMAKE_INSTALL_PREFIX}/src" CMAKE_INSTALL_PREFIX)
