@@ -1,15 +1,19 @@
-#include <algorithm>
-#include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+#include <pybind11/stl_bind.h>
+#include <stdexcept> // std::invalid_argument
 #include <vector>
 
 #include "bracelet.hxx"
 
 using namespace pybind11::literals;
 
-PYBIND11_MODULE(bracelet, m) {
-  m.doc() = "Provides functions to generate combinatoric bracelets.";
+// Because both stl.h and stl_bind.h are included, explicitly list opaque types
+PYBIND11_MAKE_OPAQUE(std::vector<std::vector<int>>);
 
+PYBIND11_MODULE(bracelet, m) {
+  // Creating an opaque type prevents copies from vector to Python List
+  pybind11::bind_vector<std::vector<std::vector<int>>>(m, "VectorInt2D");
+  m.doc() = "Provides functions to generate combinatoric bracelets.";
   m.def(
       "bracelet_fc",
       [](int n, int k, const std::vector<int> &counts) {
@@ -17,6 +21,7 @@ PYBIND11_MODULE(bracelet, m) {
         int total = 0;
         for (int i = 0; i < k; i++) {
           if (counts[i] <= 0) {
+            delete num;
             throw std::invalid_argument(
                 "All counts must be greater than zero.");
           }
@@ -24,9 +29,11 @@ PYBIND11_MODULE(bracelet, m) {
           num[i + 1] = counts[i];
         }
         if (total != n) {
+          delete num;
           throw std::invalid_argument("The sum of counts must be n.");
         }
         auto bracelets = BraceletFC(n, k, num);
+        delete num;
         return bracelets;
       },
       R"(Return all bracelets of fixed content using method by Karim et al.
