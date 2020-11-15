@@ -191,6 +191,7 @@ BraceletFC(const int n, // the length of the bracelet
   UpdateRunLength(1);
   std::vector<std::vector<int>> wrist;
   Gen(2, 1, 1, 2, 1, FALSE, n, k, num, wrist);
+  wrist.shrink_to_fit();
   return wrist;
 }
 
