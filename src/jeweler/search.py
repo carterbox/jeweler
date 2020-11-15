@@ -57,7 +57,7 @@ def lyndon(K, L, output_dir, objective_function, density=0.5):
     For the 32-bit space, searching only Lydon words reduces the search space
     to only 3.12% of the full search space.
     """
-    logger.info(f"Searching lengths {K}..{L}; "
+    logger.info(f"Searching lyndon words of lengths {K}..{L}; "
                 f"the objective is '{objective_function.__name__}'.")
 
     # Stats are L + 1 to avoid repeated subtraction inside search loop
