@@ -18,6 +18,7 @@ import os
 import numpy as np
 from tqdm import tqdm
 
+from jeweler.bracelet import bracelet_fc
 from jeweler.lyndon import LengthLimitedLyndonWords
 from jeweler.io import Archiver
 
@@ -66,17 +67,17 @@ def lyndon(K, L, output_dir, objective_function, density=0.5):
     # Skip many codes by skipping to the longest one with the desired density.
     w = [0] * (L - num_allowed_ones[-1]) + [1] * num_allowed_ones[-1]
 
-    f = Archiver(output_dir=output_dir)
-    for code in LengthLimitedLyndonWords(2, L, w):
-        if len(code) >= K and np.sum(code) == num_allowed_ones[len(code)]:
-            num_searched_codes[len(code)] += 1
-            score = objective_function(code)
-            if score > score_best[len(code)]:
-                score_best[len(code)] = score
-                f.update(objective_function.__name__,
-                         code,
-                         score,
-                         weight=num_allowed_ones[len(code)])
+    with Archiver(output_dir=output_dir) as f:
+        for code in LengthLimitedLyndonWords(2, L, w):
+            if len(code) >= K and np.sum(code) == num_allowed_ones[len(code)]:
+                num_searched_codes[len(code)] += 1
+                score = objective_function(code)
+                if score > score_best[len(code)]:
+                    score_best[len(code)] = score
+                    f.update(objective_function.__name__,
+                             code,
+                             score,
+                             weight=num_allowed_ones[len(code)])
 
 
 def bfs(L, density=0.5, batch_size=2**25, filename=None):
@@ -132,3 +133,38 @@ def bfs(L, density=0.5, batch_size=2**25, filename=None):
                           file=f)
                     print(code_best.astype(int), file=f, flush=True)
     return code_best
+
+
+def bracelet(K, L, output_dir, objective_function, density=0.5):
+    """Search bracelets of length L and fixed content for the best binary code.
+
+    Parameters
+    ----------
+    L : int
+        The maximum code length
+    output_dir : path
+        Location to put the output files
+    objective_function : function
+        A function from jeweler.objective where better scores are larger
+    density : float
+        The sum of the code divided by the length of the code
+    """
+    with Archiver(output_dir=output_dir) as f:
+        for L in range(K, L + 1):
+            logger.info(f"Searching length {L}; "
+                        f"the objective is '{objective_function.__name__}'.")
+
+            k = int(L * density)  # number of 1s in the code
+            code_best = None
+            score_best = -np.inf
+
+            codes = bracelet_fc(L, 2, [L - k, k])
+
+            title = "fixed-content bracelets 1D {:d}-bit code".format(L)
+            for code in tqdm(codes, desc=title):
+                score = objective_function(code)
+                if score > score_best:
+                    f.update(objective_function.__name__,
+                            code,
+                            score,
+                            weight=k)
