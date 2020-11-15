@@ -25,6 +25,7 @@ from jeweler.io import Archiver
 __all__ = [
     'lyndon',
     'bfs',
+    'bracelet',
 ]
 
 logger = logging.getLogger(__name__)
@@ -135,7 +136,14 @@ def bfs(L, density=0.5, batch_size=2**25, filename=None):
     return code_best
 
 
-def bracelet(K, L, output_dir, objective_function, density=0.5):
+def bracelet(
+    K,
+    L,
+    output_dir,
+    objective_function,
+    density=0.5,
+    batch_size=2048,
+):
     """Search bracelets of length L and fixed content for the best binary code.
 
     Parameters
@@ -149,23 +157,34 @@ def bracelet(K, L, output_dir, objective_function, density=0.5):
     density : float
         The sum of the code divided by the length of the code
     """
-    with Archiver(output_dir=output_dir) as f:
-        for L in range(K, L + 1):
-            logger.info(f"Searching length {L}; "
-                        f"the objective is '{objective_function.__name__}'.")
+    logger.info(f"Fixed-content bracelets of length {K}..{L}.")
+    logger.info(f"the objective is '{objective_function.__name__}'.")
+    logger.info(f"code density is {density:g}.")
 
+    with Archiver(output_dir=output_dir) as f:
+
+        for L in range(K, L + 1):
+
+            logger.info(f"Generating bracelets of length {L}.")
             k = int(L * density)  # number of 1s in the code
+            codes = bracelet_fc(L, 2, [L - k, k])
+            logger.info(f"{len(codes):,d} bracelets discovered.")
+
+            title = f"fixed-content bracelets 1D {L:d}-bit code"
             code_best = None
             score_best = -np.inf
+            for _ in tqdm(range(len(codes) // batch_size + 1), desc=title):
+                batch = codes[-batch_size:]
+                del codes[-batch_size:]
+                scores = objective_function(batch)
+                best = np.argmax(scores)
+                if scores[best] > score_best:
+                    score_best = scores[best]
+                    code_best = batch[best]
 
-            codes = bracelet_fc(L, 2, [L - k, k])
-
-            title = "fixed-content bracelets 1D {:d}-bit code".format(L)
-            scores = objective_function(codes)
-            best = np.argmax(scores)
             f.update(
                 objective_function.__name__,
-                codes[best],
-                scores[best],
+                code_best,
+                score_best,
                 weight=k,
             )
