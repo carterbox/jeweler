@@ -54,47 +54,80 @@ class Archiver(object):
         self.output_dir = os.path.abspath(output_dir)
         # Create the file if it doesn't already exist
         os.makedirs(self.output_dir, exist_ok=True)
+        self.f = None
+        self.data = None
+        self.L = None
 
-    def update(
-            self,
-            objective_function,
-            best_code,
-            objective_cost,
-            weight,
-    ):
-        """Update the best codes on the disk."""
-        W = str(weight)  # must be a string otherwise dupicate entries
-        filename = os.path.join(self.output_dir, f"{len(best_code)}.json")
+    def __enter__(self, ):
+        return self
+
+    def __exit__(self, *args):
+        self._close_file()
+
+    def _get_data(self, L):
+        if L == self.L:
+            return self.data
+
+        self._close_file()
+
+        filename = os.path.join(self.output_dir, f"{L}.json")
         if not os.path.isfile(filename):
             with open(filename, 'w') as f:
                 json.dump({}, f, indent=4)
-        with open(filename, 'a+') as f:
-            fcntl.flock(f, fcntl.LOCK_EX)
-            f.seek(0)  # <--- should reset file position to the beginning.
-            try:
-                data = json.load(f)
-            except json.decoder.JSONDecodeError:
-                logger.warning(f"{filename} already exists "
-                               f"and is improperly formatted.")
-                raise
-            if W not in data:
-                data[W] = {}
-            if (objective_function not in data[W]
-                    or data[W][objective_function]['cost'] < objective_cost):
-                data[W][objective_function] = {
-                    'cost': objective_cost,
-                    'code': best_code,
-                }
+
+        f = open(filename, 'a+')
+        fcntl.flock(f, fcntl.LOCK_EX)
+        f.seek(0)  # <--- should reset file position to the beginning.
+        try:
+            data = json.load(f)
+        except json.decoder.JSONDecodeError:
+            logger.warning(f"{filename} already exists "
+                           f"and is improperly formatted.")
+            raise
+
+        self.f = f
+        self.data = data
+        self.L = L
+        return data
+
+    def _close_file(self):
+        f = self.f
+        if f is None:
+            return
+        else:
+            data = self.data
             f.seek(0)  # <--- should reset file position to the beginning.
             f.truncate()  # remove remaining part
             json.dump(data, f, indent=4)
             fcntl.flock(f, fcntl.LOCK_UN)
+            f.close()
+            self.f = None
+
+    def update(
+        self,
+        objective_function,
+        best_code,
+        objective_cost,
+        weight,
+    ):
+        """Update the best codes on the disk."""
+        W = str(weight)  # must be a string otherwise dupicate entries
+        L = len(best_code)
+        data = self._get_data(L)
+        if W not in data:
+            data[W] = {}
+        if (objective_function not in data[W]
+                or data[W][objective_function]['cost'] < objective_cost):
+            data[W][objective_function] = {
+                'cost': objective_cost,
+                'code': best_code,
+            }
 
     def fetch(
-            self,
-            L,
-            objective_function,
-            weight,
+        self,
+        L,
+        objective_function,
+        weight,
     ):
         """Get a code and its cost from the disk."""
         W = str(weight)  # must be a string otherwise dupicate entries
