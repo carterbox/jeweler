@@ -161,10 +161,11 @@ def bracelet(K, L, output_dir, objective_function, density=0.5):
             codes = bracelet_fc(L, 2, [L - k, k])
 
             title = "fixed-content bracelets 1D {:d}-bit code".format(L)
-            for code in tqdm(codes, desc=title):
-                score = objective_function(code)
-                if score > score_best:
-                    f.update(objective_function.__name__,
-                            code,
-                            score,
-                            weight=k)
+            scores = objective_function(codes)
+            best = np.argmax(scores)
+            f.update(
+                objective_function.__name__,
+                codes[best],
+                scores[best],
+                weight=k,
+            )

@@ -8,7 +8,7 @@ __all__ = [
 ]
 
 
-def minimal_variance(code):
+def minimal_variance(code, axis=-1):
     """Return an objective function that minimizes variance of the FFT.
 
     We chose a code that (i) maximizes the minimum of the magnitude of the DFT
@@ -17,18 +17,19 @@ def minimal_variance(code):
 
     """
     # TODO: For future 2D arrays use np.fft.rfftn
-    dft = np.fft.rfft(code)
-    return np.min(np.abs(dft)) - np.var(dft)
+    dft = np.fft.rfft(code, axis=axis)
+    return np.min(np.abs(dft), axis=axis) - np.var(dft, axis=axis)
 
 
-def spectral_flatness(code):
+def spectral_flatness(code, axis=-1):
     """Return the spectral flatness of the code. Flat is 1.0. Tonal is 0.0.
 
     The spectral flatness is the geometric mean of the power spectrum divided
     by the arithmetic mean of the power spectrum.
 
     """
-    dft = np.fft.rfft(code)
+    dft = np.fft.rfft(code, axis=axis)
     power_spectrum = np.square(np.abs(dft))
-    N = power_spectrum.size
-    return np.prod(power_spectrum)**(1 / N) / np.mean(power_spectrum)
+    N = power_spectrum.shape[-1]
+    return np.prod(power_spectrum, axis=axis)**(1 / N) / np.mean(
+        power_spectrum, axis=axis)
