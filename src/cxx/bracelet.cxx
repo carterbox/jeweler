@@ -15,24 +15,29 @@
 
 #define MAX_LENGTH 64
 
+int a[MAX_LENGTH], run[MAX_LENGTH];
+
+/*-----------------------------------------------------------*/
+
 typedef struct cell {
   int next, prev;
 } cell;
 
-typedef struct element {
-  int s, v;
-} element;
-
+class List {
 cell avail[MAX_LENGTH];
 
-element B[MAX_LENGTH]; // run length encoding data structure
-int nb = 0;            // number of blocks
-int a[MAX_LENGTH], run[MAX_LENGTH];
+public:
 int head;
 
-/*-----------------------------------------------------------*/
+  List(int k) {
+    for (int j = k + 1; j >= 0; j--) {
+      avail[j].next = j - 1;
+      avail[j].prev = j + 1;
+    }
+    head = k;
+  }
 
-void ListRemove(int i) {
+  void remove(int i) {
   int p, n;
 
   if (i == head)
@@ -43,7 +48,7 @@ void ListRemove(int i) {
   avail[n].prev = p;
 }
 
-void ListAdd(int i, const int k) {
+  void add(int i, const int k) {
   int p, n;
 
   p = avail[i].prev;
@@ -54,7 +59,8 @@ void ListAdd(int i, const int k) {
     head = i;
 }
 
-int ListNext(int i) { return avail[i].next; }
+  int next(int i) { return avail[i].next; }
+};
 
 /*-----------------------------------------------------------*/
 
@@ -72,6 +78,12 @@ void Print(int p, const int n, std::vector<std::vector<int>> &wrist) {
 }
 
 /*-----------------------------------------------------------*/
+
+typedef struct element {
+  int s, v;
+} element;
+element B[MAX_LENGTH]; // run length encoding data structure
+int nb = 0;            // number of blocks
 
 void UpdateRunLength(int v) {
   if (B[nb].s == v)
@@ -113,9 +125,18 @@ int CheckRev() {
 }
 
 /*-----------------------------------------------------------*/
+// necklace is lexigraphic minimal rotation of equivalence class
+// prenecklace any prefix of a necklace
+// Lyndon word an aperiodic necklace
 
-void Gen(int t, int p, int r, int z, int b, int RS, const int n, const int k,
-         int *num, std::vector<std::vector<int>> &wrist) {
+void Gen(int t, // t = len(a[]) + 1
+         int p, // length of longest Lyndon prefix of a[]
+         int r, int z,
+         int b, // add this color to the end of a[]
+         int RS,
+         const int n, // length of fixed-content; Lyndon word when p == n
+         const int k, // number of possible colors
+         int *num, std::vector<std::vector<int>> &wrist, List &list) {
   int j, z2, p2, c;
   // Incremental comparison of a[r+1...n] with its reversal
   if (t - 1 > (n - r) / 2 + r) {
@@ -137,13 +158,13 @@ void Gen(int t, int p, int r, int z, int b, int RS, const int n, const int k,
   }
   // Recursively extend the prenecklace - unless only 0s remain to be appended
   else if (num[1] != n - t + 1) {
-    j = head;
+    j = list.head;
     while (j >= a[t - p]) {
       run[z] = t - z;
       UpdateRunLength(j);
       num[j]--;
       if (num[j] == 0)
-        ListRemove(j);
+        list.remove(j);
       a[t] = j;
       z2 = z;
       if (j != k)
@@ -153,14 +174,14 @@ void Gen(int t, int p, int r, int z, int b, int RS, const int n, const int k,
         p2 = t;
       c = CheckRev();
       if (c == 0)
-        Gen(t + 1, p2, t, z2, nb, FALSE, n, k, num, wrist);
+        Gen(t + 1, p2, t, z2, nb, FALSE, n, k, num, wrist, list);
       if (c == 1)
-        Gen(t + 1, p2, r, z2, b, RS, n, k, num, wrist);
+        Gen(t + 1, p2, r, z2, b, RS, n, k, num, wrist, list);
       if (num[j] == 0)
-        ListAdd(j, k);
+        list.add(j, k);
       num[j]++;
       RestoreRunLength();
-      j = ListNext(j);
+      j = list.next(j);
     }
     a[t] = k;
   }
@@ -174,11 +195,7 @@ BraceletFC(const int n, // the length of the bracelet
            int *num     // the number of each color; start filling at 1
 ) {
   int j;
-  for (j = k + 1; j >= 0; j--) {
-    avail[j].next = j - 1;
-    avail[j].prev = j + 1;
-  }
-  head = k;
+  List list = List(k);
   for (j = 1; j <= n; j++) {
     a[j] = k;
     run[j] = 0;
@@ -186,11 +203,11 @@ BraceletFC(const int n, // the length of the bracelet
   a[1] = 1;
   num[1]--;
   if (num[1] == 0)
-    ListRemove(1);
+    list.remove(1);
   B[0].s = 0;
   UpdateRunLength(1);
   std::vector<std::vector<int>> wrist;
-  Gen(2, 1, 1, 2, 1, FALSE, n, k, num, wrist);
+  Gen(2, 1, 1, 2, 1, FALSE, n, k, num, wrist, list);
   wrist.shrink_to_fit();
   return wrist;
 }
