@@ -24,10 +24,10 @@ typedef struct cell {
 } cell;
 
 class List {
-cell avail[MAX_LENGTH];
+  cell avail[MAX_LENGTH];
 
 public:
-int head;
+  int head;
 
   List(int k) {
     for (int j = k + 1; j >= 0; j--) {
@@ -38,26 +38,26 @@ int head;
   }
 
   void remove(int i) {
-  int p, n;
+    int p, n;
 
-  if (i == head)
-    head = avail[i].next;
-  p = avail[i].prev;
-  n = avail[i].next;
-  avail[p].next = n;
-  avail[n].prev = p;
-}
+    if (i == head)
+      head = avail[i].next;
+    p = avail[i].prev;
+    n = avail[i].next;
+    avail[p].next = n;
+    avail[n].prev = p;
+  }
 
   void add(int i, const int k) {
-  int p, n;
+    int p, n;
 
-  p = avail[i].prev;
-  n = avail[i].next;
-  avail[n].prev = i;
-  avail[p].next = i;
-  if (avail[i].prev == k + 1)
-    head = i;
-}
+    p = avail[i].prev;
+    n = avail[i].next;
+    avail[n].prev = i;
+    avail[p].next = i;
+    if (avail[i].prev == k + 1)
+      head = i;
+  }
 
   int next(int i) { return avail[i].next; }
 };
