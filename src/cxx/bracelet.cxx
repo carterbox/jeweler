@@ -213,5 +213,5 @@ int main() {
     }
     printf("\n");
   }
-  printf("Total = %d\n", wrist.size());
+  printf("Total = %zu\n", wrist.size());
 }
