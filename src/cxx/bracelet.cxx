@@ -79,37 +79,50 @@ void Print(int p, const int n, std::vector<std::vector<int>> &wrist) {
 
 /*-----------------------------------------------------------*/
 
-typedef struct element {
-  int s, v;
-} element;
-element B[MAX_LENGTH]; // run length encoding data structure
-int nb = 0;            // number of blocks
+// A compact representation of a k-ary string using a sequence of Blocks
+class RunLength {
 
-void UpdateRunLength(int v) {
+  // A k-ary string of a single color
+  struct Block {
+    int s; // the color of this string
+    int v; // the length of this string
+  };
+
+public:
+  Block *B;
+  int nb = 0; // number of blocks
+
+  // Initialize a RunLength of maximum length n
+  RunLength(int n) {
+    B = new Block[n + 1];
+    B[0].s = 0;
+  }
+  ~RunLength() { delete[] B; }
+
+  // Append a character of color v to the string
+  void update(int v) {
   if (B[nb].s == v)
-    B[nb].v = B[nb].v + 1;
+      ++B[nb].v;
   else {
     nb++;
     B[nb].v = 1;
     B[nb].s = v;
   }
 }
-
-void RestoreRunLength() {
+  // Remove the end character from the string
+  void restore() {
   if (B[nb].v == 1)
     nb--;
   else
-    B[nb].v = B[nb].v - 1;
+      --B[nb].v;
 }
-
 /*---------------------------------------------------------------------*/
 // return -1 if reverse smaller, 0 if equal, and 1 if reverse is larger
 /*---------------------------------------------------------------------*/
-
-int CheckRev() {
-  int j;
-  j = 1;
-  while (B[j].v == B[nb - j + 1].v && B[j].s == B[nb - j + 1].s && j <= nb / 2)
+  int check_reversal() {
+    int j = 1;
+    while (B[j].v == B[nb - j + 1].v && B[j].s == B[nb - j + 1].s &&
+           j <= nb / 2)
     j++;
   if (j > nb / 2)
     return 0;
@@ -123,6 +136,7 @@ int CheckRev() {
     return 1;
   return -1;
 }
+};
 
 /*-----------------------------------------------------------*/
 // necklace is lexigraphic minimal rotation of equivalence class
@@ -131,12 +145,14 @@ int CheckRev() {
 
 void Gen(int t, // t = len(a[]) + 1
          int p, // length of longest Lyndon prefix of a[]
-         int r, int z,
-         int b, // add this color to the end of a[]
+         int r, // length of longest mirror (reversal) prefix of a[]
+         int z,
+         int b, // The next color to append to a[]
          int RS,
          const int n, // length of fixed-content; Lyndon word when p == n
          const int k, // number of possible colors
-         int *num, std::vector<std::vector<int>> &wrist, List &list) {
+         int *num, std::vector<std::vector<int>> &wrist, List &list,
+         RunLength &run_length) {
   int j, z2, p2, c;
   // Incremental comparison of a[r+1...n] with its reversal
   if (t - 1 > (n - r) / 2 + r) {
@@ -149,9 +165,11 @@ void Gen(int t, // t = len(a[]) + 1
   if (num[k] == n - t + 1) {
     if (num[k] > run[t - p])
       p = n;
-    if (num[k] > 0 && t != r + 1 && B[b + 1].s == k && B[b + 1].v > num[k])
+    if (num[k] > 0 && t != r + 1 && run_length.B[b + 1].s == k &&
+        run_length.B[b + 1].v > num[k])
       RS = TRUE;
-    if (num[k] > 0 && t != r + 1 && (B[b + 1].s != k || B[b + 1].v < num[k]))
+    if (num[k] > 0 && t != r + 1 &&
+        (run_length.B[b + 1].s != k || run_length.B[b + 1].v < num[k]))
       RS = FALSE;
     if (RS == FALSE)
       Print(p, n, wrist);
@@ -159,28 +177,44 @@ void Gen(int t, // t = len(a[]) + 1
   // Recursively extend the prenecklace - unless only 0s remain to be appended
   else if (num[1] != n - t + 1) {
     j = list.head;
+
     while (j >= a[t - p]) {
       run[z] = t - z;
-      UpdateRunLength(j);
+      run_length.update(j);
+
       num[j]--;
       if (num[j] == 0)
         list.remove(j);
+
       a[t] = j;
+
       z2 = z;
+
       if (j != k)
         z2 = t + 1;
-      p2 = p;
-      if (j != a[t - p])
+
+      if (j != a[t - p]) {
         p2 = t;
-      c = CheckRev();
-      if (c == 0)
-        Gen(t + 1, p2, t, z2, nb, FALSE, n, k, num, wrist, list);
-      if (c == 1)
-        Gen(t + 1, p2, r, z2, b, RS, n, k, num, wrist, list);
+      } else {
+      p2 = p;
+      }
+
+      switch (run_length.check_reversal()) {
+      case 0:
+        Gen(t + 1, p2, t, z2, run_length.nb, FALSE, n, k, num, wrist, list,
+            run_length);
+        break;
+      case 1:
+        Gen(t + 1, p2, r, z2, b, RS, n, k, num, wrist, list, run_length);
+        break;
+      }
+
       if (num[j] == 0)
         list.add(j, k);
       num[j]++;
-      RestoreRunLength();
+
+      run_length.restore();
+
       j = list.next(j);
     }
     a[t] = k;
@@ -200,14 +234,16 @@ BraceletFC(const int n, // the length of the bracelet
     a[j] = k;
     run[j] = 0;
   }
+  // Initialize with a1 = 1; all bracelets must start with 1
   a[1] = 1;
   num[1]--;
   if (num[1] == 0)
     list.remove(1);
-  B[0].s = 0;
-  UpdateRunLength(1);
+  RunLength run_length = RunLength(n);
+  run_length.update(1);
+
   std::vector<std::vector<int>> wrist;
-  Gen(2, 1, 1, 2, 1, FALSE, n, k, num, wrist, list);
+  Gen(2, 1, 1, 2, 1, FALSE, n, k, num, wrist, list, run_length);
   wrist.shrink_to_fit();
   return wrist;
 }
