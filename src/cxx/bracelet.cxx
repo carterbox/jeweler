@@ -13,10 +13,6 @@
 #define NECK 1
 #define LYN 0
 
-#define MAX_LENGTH 64
-
-int a[MAX_LENGTH], run[MAX_LENGTH];
-
 /*-----------------------------------------------------------*/
 
 // An ordered set of integers from largest to smallest
@@ -68,7 +64,7 @@ public:
 
 /*-----------------------------------------------------------*/
 
-void Print(int p, const int n, std::vector<std::vector<int>> &wrist) {
+void Print(int *a, int p, const int n, std::vector<std::vector<int>> &wrist) {
   int j;
   if (NECK && n % p != 0)
     return;
@@ -147,7 +143,8 @@ public:
 // prenecklace any prefix of a necklace
 // Lyndon word an aperiodic necklace
 
-void Gen(int t, // t = len(a[]) + 1
+void Gen(int *a,
+         int t, // t = len(a[]) + 1
          int p, // length of longest Lyndon prefix of a[]
          int r, // length of longest mirror (reversal) prefix of a[]
          int z,
@@ -156,7 +153,7 @@ void Gen(int t, // t = len(a[]) + 1
          const int n, // length of fixed-content; Lyndon word when p == n
          const int k, // number of possible colors
          int *num, std::vector<std::vector<int>> &wrist, LinkedList &list,
-         RunLength &run_length) {
+         RunLength &run_length, int *run) {
   int j, z2, p2, c;
   // Incremental comparison of a[r+1...n] with its reversal
   if (t - 1 > (n - r) / 2 + r) {
@@ -176,7 +173,7 @@ void Gen(int t, // t = len(a[]) + 1
         (run_length.B[b + 1].s != k || run_length.B[b + 1].v < num[k]))
       RS = FALSE;
     if (RS == FALSE)
-      Print(p, n, wrist);
+      Print(a, p, n, wrist);
   }
   // Recursively extend the prenecklace - unless only 0s remain to be appended
   else if (num[1] != n - t + 1) {
@@ -205,11 +202,12 @@ void Gen(int t, // t = len(a[]) + 1
 
       switch (run_length.check_reversal()) {
       case 0:
-        Gen(t + 1, p2, t, z2, run_length.nb, FALSE, n, k, num, wrist, list,
-            run_length);
+        Gen(a, t + 1, p2, t, z2, run_length.nb, FALSE, n, k, num, wrist, list,
+            run_length, run);
         break;
       case 1:
-        Gen(t + 1, p2, r, z2, b, RS, n, k, num, wrist, list, run_length);
+        Gen(a, t + 1, p2, r, z2, b, RS, n, k, num, wrist, list, run_length,
+            run);
         break;
       }
 
@@ -232,6 +230,8 @@ BraceletFC(const int n, // the length of the bracelet
            const int k, // the number of unique colors
            int *num     // the number of each color; start filling at 1
 ) {
+  int *a = new int[n + 1];
+  int *run = new int[n + 1];
   LinkedList list = LinkedList(k);
   for (int j = 1; j <= n; j++) {
     a[j] = k; // Initialize a with k for optimization.
@@ -246,14 +246,16 @@ BraceletFC(const int n, // the length of the bracelet
   run_length.update(1);
 
   std::vector<std::vector<int>> wrist;
-  Gen(2, 1, 1, 2, 1, FALSE, n, k, num, wrist, list, run_length);
+  Gen(a, 2, 1, 1, 2, 1, FALSE, n, k, num, wrist, list, run_length, run);
   wrist.shrink_to_fit();
+  delete[] a;
+  delete[] run;
   return wrist;
 }
 
 int main() {
   int n, k;
-  int num[MAX_LENGTH];
+  int num[16];
   printf("Enter n (bracelet length) k (number of colors): ");
   if (scanf("%d %d", &n, &k) != 2)
     return 1;
