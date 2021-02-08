@@ -22,19 +22,20 @@ int a[MAX_LENGTH], run[MAX_LENGTH];
 // An ordered set of integers from largest to smallest
 class LinkedList {
 
+  int k;
+
   struct cell {
     int next, prev;
   };
 
-  cell avail[MAX_LENGTH];
-
-  int k;
+  cell *avail;
 
 public:
   int head; // the current highest number in the set
 
   // Create a set of integers for k-ary strings
   LinkedList(const int k) : k(k) {
+    avail = new cell[k + 2];
     // Initialize the set as [0, 1, ... k, k + 1]
     for (int j = k + 1; j >= 0; j--) {
       avail[j].next = j - 1;
@@ -42,10 +43,10 @@ public:
     }
     head = k;
   }
+  ~LinkedList() { delete[] avail; }
   // Remove color i from the list
   void remove(int i) {
     int p, n;
-
     if (i == head)
       head = avail[i].next;
     p = avail[i].prev;
@@ -53,10 +54,9 @@ public:
     avail[p].next = n;
     avail[n].prev = p;
   }
-
+  // Add the color i back to the list
   void add(int i) {
     int p, n;
-
     p = avail[i].prev;
     n = avail[i].next;
     avail[n].prev = i;
