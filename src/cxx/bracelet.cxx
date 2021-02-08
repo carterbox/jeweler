@@ -46,19 +46,17 @@ public:
   ~LinkedList() { delete[] avail; }
   // Remove color i from the list
   void remove(int i) {
-    int p, n;
     if (i == head)
       head = avail[i].next;
-    p = avail[i].prev;
-    n = avail[i].next;
+    int p = avail[i].prev;
+    int n = avail[i].next;
     avail[p].next = n;
     avail[n].prev = p;
   }
   // Add the color i back to the list
   void add(int i) {
-    int p, n;
-    p = avail[i].prev;
-    n = avail[i].next;
+    int p = avail[i].prev;
+    int n = avail[i].next;
     avail[n].prev = i;
     avail[p].next = i;
     if (avail[i].prev == k + 1)
