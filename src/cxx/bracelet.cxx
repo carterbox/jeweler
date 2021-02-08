@@ -143,18 +143,22 @@ public:
 // prenecklace any prefix of a necklace
 // Lyndon word an aperiodic necklace
 
-void Gen(int *a,
-         int t, // t = len(a[]) + 1
-         int p, // length of longest Lyndon prefix of a[]
-         int r, // length of longest mirror (reversal) prefix of a[]
-         int z,
-         int b, // The next color to append to a[]
-         int RS,
-         const int n, // length of fixed-content; Lyndon word when p == n
-         const int k, // number of possible colors
-         int *num, std::vector<std::vector<int>> &wrist, LinkedList &list,
-         RunLength &run_length, int *run) {
-  int j, z2, p2, c;
+void Gen(
+    int *a,
+    int t, // t = len(a[]) + 1
+    int p, // length of longest Lyndon prefix of a[]
+    int r, // length of longest mirror (reversal) prefix of a[]
+    int z, // start of the last k-1 colored block in a; t+1 if a does not
+           // end with color k-1
+    int b, // The next color to append to a[]
+    int RS,
+    const int n, // length of fixed-content; Lyndon word when p == n
+    const int k, // number of possible colors
+    int *num, std::vector<std::vector<int>> &wrist, LinkedList &list,
+    RunLength &run_length,
+    int *run // the number of consecutive k − 1’s starting at position a[j].
+) {
+
   // Incremental comparison of a[r+1...n] with its reversal
   if (t - 1 > (n - r) / 2 + r) {
     if (a[t - 1] > a[n - t + 2 + r])
@@ -162,6 +166,7 @@ void Gen(int *a,
     else if (a[t - 1] < a[n - t + 2 + r])
       RS = TRUE;
   }
+
   // Termination condition - only characters k remain to be appended
   if (num[k] == n - t + 1) {
     if (num[k] > run[t - p])
@@ -174,53 +179,57 @@ void Gen(int *a,
       RS = FALSE;
     if (RS == FALSE)
       Print(a, p, n, wrist);
+    return;
   }
-  // Recursively extend the prenecklace - unless only 0s remain to be appended
-  else if (num[1] != n - t + 1) {
-    j = list.head;
 
-    while (j >= a[t - p]) {
-      run[z] = t - z;
-      run_length.update(j);
+  // Termination condition - only 0s remain to be appended
+  if (num[1] == n - t + 1) {
+    return;
+  }
 
-      num[j]--;
-      if (num[j] == 0)
-        list.remove(j);
+  int z2, p2;
+  int j = list.head;
 
-      a[t] = j;
+  while (j >= a[t - p]) {
+    run[z] = t - z;
+    run_length.update(j);
 
-      z2 = z;
+    num[j]--;
+    if (num[j] == 0)
+      list.remove(j);
 
-      if (j != k)
-        z2 = t + 1;
+    a[t] = j;
 
-      if (j != a[t - p]) {
-        p2 = t;
-      } else {
-        p2 = p;
-      }
+    z2 = z;
 
-      switch (run_length.check_reversal()) {
-      case 0:
-        Gen(a, t + 1, p2, t, z2, run_length.nb, FALSE, n, k, num, wrist, list,
-            run_length, run);
-        break;
-      case 1:
-        Gen(a, t + 1, p2, r, z2, b, RS, n, k, num, wrist, list, run_length,
-            run);
-        break;
-      }
+    if (j != k)
+      z2 = t + 1;
 
-      if (num[j] == 0)
-        list.add(j);
-      num[j]++;
-
-      run_length.restore();
-
-      j = list.next(j);
+    if (j != a[t - p]) {
+      p2 = t;
+    } else {
+      p2 = p;
     }
-    a[t] = k;
+
+    switch (run_length.check_reversal()) {
+    case 0:
+      Gen(a, t + 1, p2, t, z2, run_length.nb, FALSE, n, k, num, wrist, list,
+          run_length, run);
+      break;
+    case 1:
+      Gen(a, t + 1, p2, r, z2, b, RS, n, k, num, wrist, list, run_length, run);
+      break;
+    }
+
+    if (num[j] == 0)
+      list.add(j);
+    num[j]++;
+
+    run_length.restore();
+
+    j = list.next(j);
   }
+  a[t] = k;
 }
 
 /*-----------------------------------------------------------*/
@@ -247,9 +256,10 @@ BraceletFC(const int n, // the length of the bracelet
 
   std::vector<std::vector<int>> wrist;
   Gen(a, 2, 1, 1, 2, 1, FALSE, n, k, num, wrist, list, run_length, run);
-  wrist.shrink_to_fit();
+
   delete[] a;
   delete[] run;
+  wrist.shrink_to_fit();
   return wrist;
 }
 
