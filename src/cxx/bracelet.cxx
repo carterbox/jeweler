@@ -28,11 +28,13 @@ class LinkedList {
 
   cell avail[MAX_LENGTH];
 
+  int k;
+
 public:
   int head; // the current highest number in the set
 
   // Create a set of integers for k-ary strings
-  LinkedList(const int k) {
+  LinkedList(const int k) : k(k) {
     // Initialize the set as [0, 1, ... k, k + 1]
     for (int j = k + 1; j >= 0; j--) {
       avail[j].next = j - 1;
@@ -52,7 +54,7 @@ public:
     avail[n].prev = p;
   }
 
-  void add(int i, const int k) {
+  void add(int i) {
     int p, n;
 
     p = avail[i].prev;
@@ -214,7 +216,7 @@ void Gen(int t, // t = len(a[]) + 1
       }
 
       if (num[j] == 0)
-        list.add(j, k);
+        list.add(j);
       num[j]++;
 
       run_length.restore();
