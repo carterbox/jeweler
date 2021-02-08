@@ -19,24 +19,28 @@ int a[MAX_LENGTH], run[MAX_LENGTH];
 
 /*-----------------------------------------------------------*/
 
-typedef struct cell {
-  int next, prev;
-} cell;
+// An ordered set of integers from largest to smallest
+class LinkedList {
 
-class List {
+  struct cell {
+    int next, prev;
+  };
+
   cell avail[MAX_LENGTH];
 
 public:
-  int head;
+  int head; // the current highest number in the set
 
-  List(int k) {
+  // Create a set of integers for k-ary strings
+  LinkedList(const int k) {
+    // Initialize the set as [0, 1, ... k, k + 1]
     for (int j = k + 1; j >= 0; j--) {
       avail[j].next = j - 1;
       avail[j].prev = j + 1;
     }
     head = k;
   }
-
+  // Remove color i from the list
   void remove(int i) {
     int p, n;
 
@@ -58,7 +62,7 @@ public:
     if (avail[i].prev == k + 1)
       head = i;
   }
-
+  // Get the next largest color in the set after i
   int next(int i) { return avail[i].next; }
 };
 
@@ -101,41 +105,41 @@ public:
 
   // Append a character of color v to the string
   void update(int v) {
-  if (B[nb].s == v)
+    if (B[nb].s == v)
       ++B[nb].v;
-  else {
-    nb++;
-    B[nb].v = 1;
-    B[nb].s = v;
+    else {
+      nb++;
+      B[nb].v = 1;
+      B[nb].s = v;
+    }
   }
-}
   // Remove the end character from the string
   void restore() {
-  if (B[nb].v == 1)
-    nb--;
-  else
+    if (B[nb].v == 1)
+      nb--;
+    else
       --B[nb].v;
-}
-/*---------------------------------------------------------------------*/
-// return -1 if reverse smaller, 0 if equal, and 1 if reverse is larger
-/*---------------------------------------------------------------------*/
+  }
+  /*---------------------------------------------------------------------*/
+  // return -1 if reverse smaller, 0 if equal, and 1 if reverse is larger
+  /*---------------------------------------------------------------------*/
   int check_reversal() {
     int j = 1;
     while (B[j].v == B[nb - j + 1].v && B[j].s == B[nb - j + 1].s &&
            j <= nb / 2)
-    j++;
-  if (j > nb / 2)
-    return 0;
-  if (B[j].s < B[nb - j + 1].s)
-    return 1;
-  if (B[j].s > B[nb - j + 1].s)
+      j++;
+    if (j > nb / 2)
+      return 0;
+    if (B[j].s < B[nb - j + 1].s)
+      return 1;
+    if (B[j].s > B[nb - j + 1].s)
+      return -1;
+    if (B[j].v < B[nb - j + 1].v && B[j + 1].s < B[nb - j + 1].s)
+      return 1;
+    if (B[j].v > B[nb - j + 1].v && B[j].s < B[nb - j].s)
+      return 1;
     return -1;
-  if (B[j].v < B[nb - j + 1].v && B[j + 1].s < B[nb - j + 1].s)
-    return 1;
-  if (B[j].v > B[nb - j + 1].v && B[j].s < B[nb - j].s)
-    return 1;
-  return -1;
-}
+  }
 };
 
 /*-----------------------------------------------------------*/
@@ -151,7 +155,7 @@ void Gen(int t, // t = len(a[]) + 1
          int RS,
          const int n, // length of fixed-content; Lyndon word when p == n
          const int k, // number of possible colors
-         int *num, std::vector<std::vector<int>> &wrist, List &list,
+         int *num, std::vector<std::vector<int>> &wrist, LinkedList &list,
          RunLength &run_length) {
   int j, z2, p2, c;
   // Incremental comparison of a[r+1...n] with its reversal
@@ -196,7 +200,7 @@ void Gen(int t, // t = len(a[]) + 1
       if (j != a[t - p]) {
         p2 = t;
       } else {
-      p2 = p;
+        p2 = p;
       }
 
       switch (run_length.check_reversal()) {
@@ -228,10 +232,9 @@ BraceletFC(const int n, // the length of the bracelet
            const int k, // the number of unique colors
            int *num     // the number of each color; start filling at 1
 ) {
-  int j;
-  List list = List(k);
-  for (j = 1; j <= n; j++) {
-    a[j] = k;
+  LinkedList list = LinkedList(k);
+  for (int j = 1; j <= n; j++) {
+    a[j] = k; // Initialize a with k for optimization.
     run[j] = 0;
   }
   // Initialize with a1 = 1; all bracelets must start with 1
