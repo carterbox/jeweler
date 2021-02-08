@@ -24,13 +24,19 @@ class LinkedList {
     int next, prev;
   };
 
-  cell *avail;
+  cell *avail; // A linked list for the queue
+  int *num;    // The number of each color remaining
 
 public:
   int head; // the current highest number in the set
 
   // Create a set of integers for k-ary strings
-  LinkedList(const int k) : k(k) {
+  LinkedList(const int k, int *n) : k(k) {
+    num = new int[k + 1];
+    num[0] = 0;
+    for (int i = 1; i <= k; i++) {
+      num[i] = n[i];
+    }
     avail = new cell[k + 2];
     // Initialize the set as [0, 1, ... k, k + 1]
     for (int j = k + 1; j >= 0; j--) {
@@ -39,27 +45,38 @@ public:
     }
     head = k;
   }
-  ~LinkedList() { delete[] avail; }
-  // Remove color i from the list
-  void remove(int i) {
-    if (i == head)
-      head = avail[i].next;
-    int p = avail[i].prev;
-    int n = avail[i].next;
-    avail[p].next = n;
-    avail[n].prev = p;
+  ~LinkedList() {
+    delete[] avail;
+    delete[] num;
   }
-  // Add the color i back to the list
+  // Remove one color i bead from the list
+  void remove(int i) {
+    --num[i];
+    if (num[i] == 0) {
+      if (i == head)
+        head = avail[i].next;
+      int p = avail[i].prev;
+      int n = avail[i].next;
+      avail[p].next = n;
+      avail[n].prev = p;
+    }
+  }
+  // Add one color i bead back to the list
   void add(int i) {
-    int p = avail[i].prev;
-    int n = avail[i].next;
-    avail[n].prev = i;
-    avail[p].next = i;
-    if (avail[i].prev == k + 1)
-      head = i;
+    if (num[i] == 0) {
+      int p = avail[i].prev;
+      int n = avail[i].next;
+      avail[n].prev = i;
+      avail[p].next = i;
+      if (avail[i].prev == k + 1)
+        head = i;
+    }
+    ++num[i];
   }
   // Get the next largest color in the set after i
   int next(int i) { return avail[i].next; }
+  // Get the number of available beads of the ith color
+  int operator[](int i) const { return num[i]; }
 };
 
 /*-----------------------------------------------------------*/
@@ -154,7 +171,7 @@ void Gen(
     int RS,
     const int n, // length of fixed-content; Lyndon word when p == n
     const int k, // number of possible colors
-    int *num, std::vector<std::vector<int>> &wrist, LinkedList &list,
+    LinkedList &num, std::vector<std::vector<int>> &wrist,
     RunLength &run_length,
     int *run // the number of consecutive k − 1’s starting at position a[j].
 ) {
@@ -188,15 +205,13 @@ void Gen(
   }
 
   int z2, p2;
-  int j = list.head;
+  int j = num.head;
 
   while (j >= a[t - p]) {
     run[z] = t - z;
     run_length.update(j);
 
-    num[j]--;
-    if (num[j] == 0)
-      list.remove(j);
+    num.remove(j);
 
     a[t] = j;
 
@@ -213,21 +228,19 @@ void Gen(
 
     switch (run_length.check_reversal()) {
     case 0:
-      Gen(a, t + 1, p2, t, z2, run_length.nb, FALSE, n, k, num, wrist, list,
+      Gen(a, t + 1, p2, t, z2, run_length.nb, FALSE, n, k, num, wrist,
           run_length, run);
       break;
     case 1:
-      Gen(a, t + 1, p2, r, z2, b, RS, n, k, num, wrist, list, run_length, run);
+      Gen(a, t + 1, p2, r, z2, b, RS, n, k, num, wrist, run_length, run);
       break;
     }
 
-    if (num[j] == 0)
-      list.add(j);
-    num[j]++;
+    num.add(j);
 
     run_length.restore();
 
-    j = list.next(j);
+    j = num.next(j);
   }
   a[t] = k;
 }
@@ -241,21 +254,19 @@ BraceletFC(const int n, // the length of the bracelet
 ) {
   int *a = new int[n + 1];
   int *run = new int[n + 1];
-  LinkedList list = LinkedList(k);
+  LinkedList list = LinkedList(k, num);
   for (int j = 1; j <= n; j++) {
     a[j] = k; // Initialize a with k for optimization.
     run[j] = 0;
   }
   // Initialize with a1 = 1; all bracelets must start with 1
   a[1] = 1;
-  num[1]--;
-  if (num[1] == 0)
-    list.remove(1);
+  list.remove(1);
   RunLength run_length = RunLength(n);
   run_length.update(1);
 
   std::vector<std::vector<int>> wrist;
-  Gen(a, 2, 1, 1, 2, 1, FALSE, n, k, num, wrist, list, run_length, run);
+  Gen(a, 2, 1, 1, 2, 1, FALSE, n, k, list, wrist, run_length, run);
 
   delete[] a;
   delete[] run;
