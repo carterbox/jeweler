@@ -1,0 +1,8 @@
+include README.md
+include LICENSE
+graft src/jeweler
+prune _skbuild/
+global-exclude *.py[co]
+global-exclude *.cxx
+global-exclude *.c
+

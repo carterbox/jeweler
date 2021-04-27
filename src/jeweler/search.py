@@ -18,12 +18,14 @@ import os
 import numpy as np
 from tqdm import tqdm
 
+from jeweler.bracelet import bracelet_fc
 from jeweler.lyndon import LengthLimitedLyndonWords
 from jeweler.io import Archiver
 
 __all__ = [
     'lyndon',
     'bfs',
+    'bracelet',
 ]
 
 logger = logging.getLogger(__name__)
@@ -55,7 +57,7 @@ def lyndon(K, L, output_dir, objective_function, density=0.5):
     For the 32-bit space, searching only Lydon words reduces the search space
     to only 3.12% of the full search space.
     """
-    logger.info(f"Searching lengths {K}..{L}; "
+    logger.info(f"Searching lyndon words of lengths {K}..{L}; "
                 f"the objective is '{objective_function.__name__}'.")
 
     # Stats are L + 1 to avoid repeated subtraction inside search loop
@@ -66,17 +68,17 @@ def lyndon(K, L, output_dir, objective_function, density=0.5):
     # Skip many codes by skipping to the longest one with the desired density.
     w = [0] * (L - num_allowed_ones[-1]) + [1] * num_allowed_ones[-1]
 
-    f = Archiver(output_dir=output_dir)
-    for code in LengthLimitedLyndonWords(2, L, w):
-        if len(code) >= K and np.sum(code) == num_allowed_ones[len(code)]:
-            num_searched_codes[len(code)] += 1
-            score = objective_function(code)
-            if score > score_best[len(code)]:
-                score_best[len(code)] = score
-                f.update(objective_function.__name__,
-                         code,
-                         score,
-                         weight=num_allowed_ones[len(code)])
+    with Archiver(output_dir=output_dir) as f:
+        for code in LengthLimitedLyndonWords(2, L, w):
+            if len(code) >= K and np.sum(code) == num_allowed_ones[len(code)]:
+                num_searched_codes[len(code)] += 1
+                score = objective_function(code)
+                if score > score_best[len(code)]:
+                    score_best[len(code)] = score
+                    f.update(objective_function.__name__,
+                             code,
+                             score,
+                             weight=num_allowed_ones[len(code)])
 
 
 def bfs(L, density=0.5, batch_size=2**25, filename=None):
@@ -132,3 +134,57 @@ def bfs(L, density=0.5, batch_size=2**25, filename=None):
                           file=f)
                     print(code_best.astype(int), file=f, flush=True)
     return code_best
+
+
+def bracelet(
+    K,
+    L,
+    output_dir,
+    objective_function,
+    density=0.5,
+    batch_size=2048,
+):
+    """Search bracelets of length L and fixed content for the best binary code.
+
+    Parameters
+    ----------
+    L : int
+        The maximum code length
+    output_dir : path
+        Location to put the output files
+    objective_function : function
+        A function from jeweler.objective where better scores are larger
+    density : float
+        The sum of the code divided by the length of the code
+    """
+    logger.info(f"Fixed-content bracelets of length {K}..{L}.")
+    logger.info(f"the objective is '{objective_function.__name__}'.")
+    logger.info(f"code density is {density:g}.")
+
+    with Archiver(output_dir=output_dir) as f:
+
+        for L in range(K, L + 1):
+
+            logger.info(f"Generating bracelets of length {L}.")
+            k = int(L * density)  # number of 1s in the code
+            codes = bracelet_fc(L, 2, [L - k, k])
+            logger.info(f"{len(codes):,d} bracelets discovered.")
+
+            title = f"fixed-content bracelets 1D {L:d}-bit code"
+            code_best = None
+            score_best = -np.inf
+            for _ in tqdm(range(len(codes) // batch_size + 1), desc=title):
+                batch = codes[-batch_size:]
+                del codes[-batch_size:]
+                scores = objective_function(batch)
+                best = np.argmax(scores)
+                if scores[best] > score_best:
+                    score_best = scores[best]
+                    code_best = batch[best]
+
+            f.update(
+                objective_function.__name__,
+                code_best,
+                score_best,
+                weight=k,
+            )

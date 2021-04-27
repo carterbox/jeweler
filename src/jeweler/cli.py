@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
               help='Put the search results here.')
 @click.option('-s',
               '--search-method',
-              default='lyndon',
+              default='bracelet',
               type=click.Choice(jeweler.search.__all__),
               help='Use this method to search codes.')
 @click.option('-f',
@@ -46,4 +46,4 @@ def cli(length_min, length_max, output_dir, search_method, objective_function):
         objective_function=getattr(jeweler.objective, objective_function),
     )
     after = time.time()
-    logger.info(f"This search took {after - before} seconds.")
+    logger.info(f"This search took {after - before:.3e} seconds.")

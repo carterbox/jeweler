@@ -1,9 +1,10 @@
-from setuptools import setup
+from skbuild import setup
 
 setup(
     name="jeweler",
     version='0.0',
-    packages=['jeweler', 'jeweler.catalog'],
+    packages=['jeweler'],
+    package_dir={'': 'src'},
     install_requires=[
         'click',
         'numpy',
@@ -14,5 +15,5 @@ setup(
         [console_scripts]
         jeweler=jeweler.cli:cli
     ''',
-    package_data={'': ['*.json']},
+    include_package_data=True,
 )
