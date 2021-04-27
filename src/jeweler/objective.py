@@ -15,6 +15,12 @@ def minimal_variance(code, axis=-1):
     values and (ii) minimizes the variance of the DFT values. Using a rating
     parameter, score = magnitude - variance.
 
+    References
+    ----------
+    Raskar, R., Agrawal, A., & Tumblin, J. (2006). Coded exposure photography:
+    Motion deblurring using fluttered shutter. Acm Transactions on Graphics,
+    25(3), 795–804. https://doi.org/10.1145/1179352.1141957
+
     """
     # TODO: For future 2D arrays use np.fft.rfftn
     dft = np.fft.rfft(code, axis=axis)
