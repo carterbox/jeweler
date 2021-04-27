@@ -183,13 +183,12 @@ def bracelet(
                 if scores[best] > score_best:
                     score_best = scores[best]
                     code_best = batch[best]
-
-            f.update(
-                objective_function.__name__,
-                code_best,
-                score_best,
-                weight=k,
-            )
+                    f.update(
+                        objective_function.__name__,
+                        code_best,
+                        score_best,
+                        weight=k,
+                    )
 
 
 def _necklace_chunk(necklaces, chunksize):
@@ -263,10 +262,9 @@ def necklace(
                 if scores[best] > score_best:
                     score_best = scores[best]
                     code_best = batch[best].astype('int', copy=False).tolist()
-
-            f.update(
-                objective_function.__name__,
-                code_best,
-                score_best,
-                weight=k,
-            )
+                    f.update(
+                        objective_function.__name__,
+                        code_best,
+                        score_best,
+                        weight=k,
+                    )
