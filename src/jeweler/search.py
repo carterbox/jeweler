@@ -110,7 +110,11 @@ def bfs(L, density=0.5, batch_size=2**25, filename=None):
     num_searched_codes = 0
 
     title = "brute force 1D {:d}-bit code".format(L)
-    for i in tqdm(range(0, num_batches), desc=title):
+    for i in tqdm(
+            range(0, num_batches),
+            desc=title,
+            smoothing=0.05,
+    ):
         # Get the next batch of codes
         indices = list(itertools.islice(code_generator, num_codes_in_batch))
         if len(indices) == 0:
@@ -175,7 +179,11 @@ def bracelet(
             title = f"fixed-content bracelets 1D {L:d}-bit code"
             code_best = None
             score_best = -np.inf
-            for _ in tqdm(range(len(codes) // batch_size + 1), desc=title):
+            for _ in tqdm(
+                    range(len(codes) // batch_size + 1),
+                    desc=title,
+                    smoothing=0.05,
+            ):
                 batch = codes[-batch_size:]
                 del codes[-batch_size:]
                 scores = objective_function(batch)
@@ -255,7 +263,11 @@ def necklace(
             title = f"fixed-content necklaces 1D {L:d}-bit code"
             code_best = None
             score_best = -np.inf
-            for _ in tqdm(range(ncodes // batch_size + 1), desc=title):
+            for _ in tqdm(
+                    range(ncodes // batch_size + 1),
+                    desc=title,
+                    smoothing=0.05,
+            ):
                 batch = next(chunks)
                 scores = objective_function(batch)
                 best = np.argmax(scores)
