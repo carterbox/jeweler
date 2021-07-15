@@ -16,6 +16,7 @@ import logging
 import os
 
 import numpy as np
+from numpy.random import default_rng
 from sage.all import Necklaces
 from tqdm import tqdm
 
@@ -24,10 +25,11 @@ from jeweler.lyndon import LengthLimitedLyndonWords
 from jeweler.io import Archiver
 
 __all__ = [
-    'lyndon',
-    'bfs',
     'bracelet',
+    'exhaustive',
+    'lyndon',
     'necklace',
+    'random',
 ]
 
 logger = logging.getLogger(__name__)
@@ -83,63 +85,129 @@ def lyndon(K, L, output_dir, objective_function, density=0.5):
                              weight=num_allowed_ones[len(code)])
 
 
-def bfs(L, density=0.5, batch_size=2**25, filename=None):
+def _exhaustive_batch(batch_size, length, weight):
+    combinations = itertools.combinations(range(length), weight)
+    try:
+        while True:
+            count = 0
+            codes = np.zeros((batch_size, length), dtype=np.float32)
+            for row in codes:
+                row[list(next(combinations))] = 1
+                count += 1
+            yield codes
+    except StopIteration:
+        yield codes[:count]
+
+
+def exhaustive(
+    K,
+    L,
+    output_dir,
+    objective_function,
+    density=0.5,
+    batch_bits=4096,
+):
     """Find the best binary code of length L using a brute force search.
 
     Parameters
     ----------
     density: float
         The fraction of indices that are one.
-    batch_size: int
+    batch_bits: int
         The number of bits to try at once. Limits memory consumption.
     filename: string
         The name of a file to dump the best result at the completion of every
         batch.
 
     """
-    k = int(L * density)  # number of 1s in the code
-    code_generator = itertools.combinations(range(L), k)
-    num_combinations = (np.math.factorial(L) //
-                        (np.math.factorial(k) * np.math.factorial(L - k)))
-    # Determine the number of codes to try in one go and make a code generator
-    num_codes_in_batch = max(batch_size // L, 1)
-    num_batches = np.ceil(num_combinations / num_codes_in_batch).astype(int)
+    with Archiver(output_dir=output_dir) as f:
+        for length in range(K, L + 1):
+            weight = int(length * density)  # number of 1s in the code
+            code_best = None
+            score_best = -np.inf
+            batch_size = max(1, batch_bits // length)
+            number_of_batches = 1 + (
+                np.math.factorial(length) //
+                (np.math.factorial(weight) *
+                 np.math.factorial(length - weight))) // batch_size
+            for batch in tqdm(
+                    _exhaustive_batch(batch_size, length, weight),
+                    desc="exhaustive 1D {:d}-bit code".format(length),
+                    smoothing=0.05,
+                    total=number_of_batches,
+            ):
+                scores = objective_function(batch)
+                best = np.argmax(scores)
+                if scores[best] > score_best:
+                    score_best = scores[best]
+                    code_best = batch[best].astype('int', copy=False).tolist()
+                    f.update(
+                        objective_function.__name__,
+                        code_best,
+                        score_best,
+                        weight=weight,
+                    )
 
-    code_best = None
-    score_best = -np.inf
-    num_searched_codes = 0
 
-    title = "brute force 1D {:d}-bit code".format(L)
-    for i in tqdm(
-            range(0, num_batches),
-            desc=title,
-            smoothing=0.05,
-    ):
-        # Get the next batch of codes
-        indices = list(itertools.islice(code_generator, num_codes_in_batch))
-        if len(indices) == 0:
-            # Quit if there are no more codes to try
-            break
-        num_searched_codes += len(indices)
-        # convert indices to a binary code
-        codes = np.zeros([len(indices), L], dtype=np.float32)
-        rows, cols = np.meshgrid(range(len(indices)), range(k), indexing='ij')
-        codes[rows, indices] = 1
-        # compute the DFT of the code
-        dft = np.fft.rfft(codes, axis=1)
-        # rate all of the DFTs
-        score = np.min(np.abs(dft), axis=1) - np.var(dft, axis=1)
-        best = np.argmax(score)
-        if score[best] > score_best:
-            code_best = codes[best]
-            score_best = score[best]
-            if filename is not None:
-                with open(filename, mode='w', encoding='utf-8') as f:
-                    print("# Best code from searching {:,d} codes".format(
-                        num_searched_codes),
-                          file=f)
-                    print(code_best.astype(int), file=f, flush=True)
-    return code_best
+def _random_batch(batch_size, L, k):
+    """Return a random batch of with length L and weight k."""
+    rng = default_rng()
+    while True:
+        codes = np.zeros((batch_size, L), dtype=np.float32)
+        for row in codes:
+            row[rng.choice(L, k, replace=False)] = 1
+        yield codes
+
+
+def random(
+    K,
+    L,
+    output_dir,
+    objective_function,
+    density=0.5,
+    batch_bits=4096,
+):
+    """Find the best binary code of length L using a random search.
+
+    Parameters
+    ----------
+    K : int
+        The minimimum code length inclusive
+    L : int
+        The maximum code length inclusive
+    output_dir : path
+        Location to put the output files
+    objective_function : function
+        A function from jeweler.objective where better scores are larger
+    density : float
+        The sum of the code divided by the length of the code
+
+    """
+    with Archiver(output_dir=output_dir) as f:
+        for length in range(K, L + 1):
+            logger.info(f"Generating random codes of length {L}.")
+            code_best = None
+            score_best = -np.inf
+            num_searched_codes = 0
+            batch_size = max(1, batch_bits // length)
+            logger.info(f"Batch size is {batch_size}.")
+            weight = int(length * density)  # number of 1s in the code
+            for batch in tqdm(
+                    _random_batch(batch_size, length, weight),
+                    desc="random 1D {:d}-bit code".format(length),
+                    smoothing=0.05,
+            ):
+                scores = objective_function(batch)
+                best = np.argmax(scores)
+                if scores[best] > score_best:
+                    score_best = scores[best]
+                    code_best = batch[best].astype('int', copy=False).tolist()
+                    f.update(
+                        objective_function.__name__,
+                        code_best,
+                        score_best,
+                        weight=weight,
+                    )
 
 
 def bracelet(
