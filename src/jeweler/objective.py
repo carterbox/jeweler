@@ -12,8 +12,8 @@ def minimal_variance(code, axis=-1):
     """Return an objective function that minimizes variance of the FFT.
 
     We chose a code that (i) maximizes the minimum of the magnitude of the DFT
-    values and (ii) minimizes the variance of the DFT values. Using a rating
-    parameter, score = magnitude - variance.
+    values and (ii) minimizes the variance of the magnitude of the DFT values.
+    Using a rating parameter, score = magnitude - variance.
 
     References
     ----------
@@ -23,8 +23,8 @@ def minimal_variance(code, axis=-1):
 
     """
     # TODO: For future 2D arrays use np.fft.rfftn
-    dft = np.fft.rfft(code, axis=axis)
-    return np.min(np.abs(dft), axis=axis) - np.var(dft, axis=axis)
+    dft_mag = np.abs(np.fft.rfft(code, axis=axis))
+    return np.min(dft_mag, axis=axis) - np.var(dft_mag, axis=axis)
 
 
 def spectral_flatness(code, axis=-1):
