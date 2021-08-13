@@ -23,9 +23,9 @@ import json
 import logging
 import os
 
-all = [
-    'Archiver',
-]
+import pandas
+
+all = ['Archiver', 'ArchiverPandas']
 
 logger = logging.getLogger(__name__)
 
@@ -146,3 +146,105 @@ class Archiver(object):
             return data[W][objective_function]
         else:
             raise NotInCatalogError(L, W, objective_function)
+
+
+class ArchiverPandas(object):
+    """Manages code records for competing disk writes.
+
+    Stores information about possible best codes in a Pandas table in a file
+    named by the length of the code. i.e. all data on codes length 24 are
+    stored together in "24.json".
+
+    Attributes
+    ----------
+    output_dir : str
+        The path of the folder into which the file will be saved.
+    L : int > 0
+        The length of the code in the archive.
+    table : pandas.DataFrame
+        A table of all the best code candidates.
+    filename : str
+        The name of the file where the codes will be stored.
+    """
+    def __init__(self, output_dir: str, L: int):
+        """Set up an Archiver instance."""
+        self.output_dir = os.path.abspath(output_dir)
+        # Create the file if it doesn't already exist
+        os.makedirs(self.output_dir, exist_ok=True)
+        self.table = pandas.DataFrame(dtype='object')
+        if L > 0:
+            self.L = L
+        else:
+            raise ValueError("L must be a positive integer!")
+        self.filename = os.path.join(self.output_dir, f"{self.L}.json")
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        if os.path.isfile(self.filename):
+            already_exists = True
+            mode = 'r+'
+        else:
+            already_exists = False
+            mode = 'w'
+        with open(self.filename, mode) as f:
+            if already_exists:
+                existing_table = pandas.io.json.read_json(f)
+                f.seek(0)  # <--- should reset file position to the beginning.
+                f.truncate()  # remove remaining part
+                self.table = existing_table.append(
+                    self.table,
+                    ignore_index=True,
+                    verify_integrity=True,
+                )
+            self.table = self.table.round({"cost": 6})
+            self.table.drop_duplicates(
+                subset=[
+                    "objective",
+                    "weight",
+                    "progress",
+                ],
+                keep='last',
+                inplace=True,
+            )
+            pandas.io.json.to_json(
+                f,
+                self.table,
+                indent=2,
+            )
+
+    def update(
+        self,
+        objective_function: str,
+        best_code,
+        objective_cost,
+        weight,
+        progress=0,
+    ):
+        """Update the best codes on the disk."""
+        new_entry = pandas.DataFrame({
+            "objective": objective_function,
+            "code": [best_code],
+            "cost": objective_cost,
+            "weight": weight,
+            "progress": progress,
+        })
+        self.table = self.table.append(
+            new_entry,
+            ignore_index=True,
+            verify_integrity=True,
+        )
+
+    def fetch(
+        self,
+        L,
+        objective_function,
+        weight,
+    ):
+        """Get a code and its cost from the disk."""
+        if not os.path.isfile(self.filename):
+            raise NotInCatalogError(L, weight, objective_function)
+        table = pandas.io.json.read_json(self.filename)
+        return table[table["objective"] == objective_function
+                     and table["weight"] == weight]
