@@ -52,5 +52,11 @@ class TestMinimalVarianceInvarianceAssumptions(TestDFTInvarianceAssumptions):
         self.invariant_function = minimal_variance
 
 
+class TestCodedFactorInvarianceAssumptions(TestDFTInvarianceAssumptions):
+    def setUp(self):
+        super().setUp()
+        self.invariant_function = minimal_variance
+
+
 if __name__ == '__main__':
     unittest.main()
