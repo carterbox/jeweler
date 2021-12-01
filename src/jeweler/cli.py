@@ -28,12 +28,12 @@ logger = logging.getLogger(__name__)
               help='Put the search results here.')
 @click.option('-s',
               '--search-method',
-              default='bracelet',
+              default=jeweler.search.__all__[0],
               type=click.Choice(jeweler.search.__all__),
               help='Use this method to search codes.')
 @click.option('-f',
               '--objective-function',
-              default='minimal_variance',
+              default=jeweler.objective.__all__[0],
               type=click.Choice(jeweler.objective.__all__),
               help='Use this function to score codes.')
 def cli(length_min, length_max, output_dir, search_method, objective_function):
