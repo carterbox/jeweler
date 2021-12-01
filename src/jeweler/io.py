@@ -1,22 +1,4 @@
-"""Provides an interface for writing best codes to the disk.
-
-Data is stored as a JSON in the following format:
-
-```json
-{
-    2: {  # the code weight
-        "minimal_variance" : {  # the objective function
-            "code" : [0, 1, 0, 0, 1],
-            "cost" : -145641.4124,
-        },
-        "spectral_flatness" : {
-            "code" : [0, 1, 0, 0, 1],
-            "cost" : -145641.4124,
-        }
-    }
-}
-```
-"""
+"""Provides an interface for writing best codes to the disk."""
 
 import fcntl
 import json
@@ -40,6 +22,23 @@ class NotInCatalogError(ValueError):
 
 class Archiver(object):
     """Manages code records for competing disk writes.
+
+    Data is stored as a JSON in the following format:
+
+    ```json
+    {
+        2: {  # the code weight
+            "minimal_variance" : {  # the objective function
+                "code" : [0, 1, 0, 0, 1],
+                "cost" : -145641.4124,
+            },
+            "spectral_flatness" : {
+                "code" : [0, 1, 0, 0, 1],
+                "cost" : -145641.4124,
+            }
+        }
+    }
+    ```
 
     Attributes
     ----------
