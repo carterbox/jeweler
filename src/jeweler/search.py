@@ -115,7 +115,9 @@ def lyndon(
 
             codes = LyndonWords([length - weight, weight])
             ncodes = int(codes.cardinality())
-            number_of_batches = ncodes // batch_size + 1 if batch_size < ncodes or ncodes % batch_size > 0 else 0
+            number_of_batches = (ncodes // batch_size +
+                                 1 if batch_size < ncodes
+                                 or ncodes % batch_size > 0 else 0)
             for batch in tqdm(
                     _lyndon_chunk(codes, (batch_size, length)),
                     desc=f"fixed-content Lyndon words 1D {length:d}-bit code",
@@ -192,7 +194,9 @@ def exhaustive(
             ncodes = (np.math.factorial(length) //
                       (np.math.factorial(weight) *
                        np.math.factorial(length - weight)))
-            number_of_batches = ncodes // batch_size + 1 if batch_size < ncodes or ncodes % batch_size > 0 else 0
+            number_of_batches = (ncodes // batch_size +
+                                 1 if batch_size < ncodes
+                                 or ncodes % batch_size > 0 else 0)
             for batch in tqdm(
                     _exhaustive_batch(batch_size, length, weight),
                     desc="exhaustive 1D {:d}-bit code".format(length),
