@@ -91,5 +91,6 @@ def coded_factor(code, axis=-1, λ=8.5):
     1–18. https://doi.org/10.1007/s11263-016-0976-4.
     """
     L = code.shape[axis]
-    mtf = np.abs(np.fft.rfft(code, axis=axis))
-    return L * L / np.var(mtf, axis=axis) + λ * np.min(np.log(mtf), axis=axis)
+    mtf = np.abs(np.fft.fft(code, axis=axis))
+    v = np.var(mtf, axis=axis) + 1e-16
+    return (L * L) / v + λ * np.min(np.log(mtf + 1e-16), axis=axis)

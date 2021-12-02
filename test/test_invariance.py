@@ -1,6 +1,5 @@
 import unittest
-from jeweler.objective import minimal_variance, spectral_flatness
-
+from jeweler.objective import minimal_variance, spectral_flatness, coded_factor
 import numpy as np
 
 
@@ -21,6 +20,7 @@ class TestDFTInvarianceAssumptions(unittest.TestCase):
             [1, 1, 0, 1, 0, 0],
             [1, 1, 1, 1, 1, 1],
             [0, 0, 1, 0, 0, 1],
+            [0, 1, 1, 0, 0, 1],
         ])
 
     # @unittest.skip("For debugging purposes only.")
@@ -55,7 +55,7 @@ class TestMinimalVarianceInvarianceAssumptions(TestDFTInvarianceAssumptions):
 class TestCodedFactorInvarianceAssumptions(TestDFTInvarianceAssumptions):
     def setUp(self):
         super().setUp()
-        self.invariant_function = minimal_variance
+        self.invariant_function = coded_factor
 
 
 if __name__ == '__main__':
