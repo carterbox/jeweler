@@ -214,10 +214,10 @@ def exhaustive(
                     )
 
 
-def _random_batch(batch_size, L, k):
+def _random_batch(batch_size, L, k, num_batch):
     """Return a random batch of with length L and weight k."""
     rng = default_rng()
-    for _ in range(L * L):
+    for _ in range(num_batch):
         codes = np.zeros((batch_size, L), dtype=np.float32)
         for row in codes:
             row[rng.choice(L, k, replace=False)] = 1
@@ -261,10 +261,13 @@ def random(
             batch_size = max(1, batch_bits // length)
             progress = 0
 
+            number_of_batches = length * length
             for batch in tqdm(
-                    _random_batch(batch_size, length, weight),
+                    _random_batch(batch_size, length, weight,
+                                  number_of_batches),
                     desc="random 1D {:d}-bit code".format(length),
                     smoothing=0.05,
+                    total=number_of_batches,
             ):
                 scores = objective_function(batch)
                 best = np.argmax(scores)
