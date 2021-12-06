@@ -6,6 +6,7 @@ import logging
 import os
 
 import pandas
+import numpy as np
 
 all = ['Archiver', 'ArchiverPandas']
 
@@ -239,13 +240,20 @@ class ArchiverPandas(object):
 
     def fetch(
         self,
-        L,
-        objective_function,
-        weight,
+        search_method: str,
+        objective_function: str,
+        weight: int,
     ):
         """Get a code and its cost from the disk."""
-        if not os.path.isfile(self.filename):
-            raise NotInCatalogError(L, weight, objective_function)
-        table = pandas.io.json.read_json(self.filename)
-        return table[table["objective"] == objective_function
-                     and table["weight"] == weight]
+        if os.path.isfile(self.filename):
+            with open(self.filename, 'r+') as f:
+                table = pandas.io.json.read_json(f)
+            try:
+                table = table[(table["objective"] == objective_function)
+                              & (table["weight"] == weight)
+                              & (table["search"] == search_method)]
+                best = table.loc[table['cost'].idxmax()]
+                return best["code"], best["cost"], best["progress"]
+            except ValueError:
+                pass
+        return None, -np.inf, 0

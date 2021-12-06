@@ -108,9 +108,12 @@ def lyndon(
     for length in range(K, L + 1):
         with ArchiverPandas(output_dir=output_dir, L=length) as f:
             weight = int(length * density)  # number of 1s in the code
-            code_best = None
-            score_best = -np.inf
             batch_size = max(1, batch_bits // length)
+            code_best, score_best, progress_best = f.fetch(
+                'lyndon',
+                objective_function.__name__,
+                weight,
+            )
             progress = 0
 
             codes = LyndonWords([length - weight, weight])
@@ -124,9 +127,11 @@ def lyndon(
                     smoothing=0.05,
                     total=number_of_batches,
             ):
+                progress += len(batch)
+                if progress < progress_best:
+                    continue
                 scores = objective_function(batch)
                 best = np.argmax(scores)
-                progress += len(scores)
                 if scores[best] > score_best:
                     score_best = scores[best]
                     code_best = batch[best].astype('int', copy=False)
@@ -187,9 +192,12 @@ def exhaustive(
     for length in range(K, L + 1):
         with ArchiverPandas(output_dir=output_dir, L=length) as f:
             weight = int(length * density)  # number of 1s in the code
-            code_best = None
-            score_best = -np.inf
             batch_size = max(1, batch_bits // length)
+            code_best, score_best, progress_best = f.fetch(
+                'exhaustive',
+                objective_function.__name__,
+                weight,
+            )
             progress = 0
 
             ncodes = (np.math.factorial(length) //
@@ -204,9 +212,11 @@ def exhaustive(
                     smoothing=0.05,
                     total=number_of_batches,
             ):
+                progress += len(batch)
+                if progress < progress_best:
+                    continue
                 scores = objective_function(batch)
                 best = np.argmax(scores)
-                progress += len(scores)
                 if scores[best] > score_best:
                     score_best = scores[best]
                     code_best = batch[best].astype('int', copy=False)
@@ -262,10 +272,12 @@ def random(
     for length in range(K, L + 1):
         with ArchiverPandas(output_dir=output_dir, L=length) as f:
             weight = int(length * density)  # number of 1s in the code
-            code_best = None
-            score_best = -np.inf
             batch_size = max(1, batch_bits // length)
-            progress = 0
+            code_best, score_best, progress = f.fetch(
+                'random',
+                objective_function.__name__,
+                weight,
+            )
 
             number_of_batches = length * length
             for batch in tqdm(
