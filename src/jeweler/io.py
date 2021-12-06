@@ -215,6 +215,7 @@ class ArchiverPandas(object):
 
     def update(
         self,
+        search_method: str,
         objective_function: str,
         best_code,
         objective_cost,
@@ -223,6 +224,7 @@ class ArchiverPandas(object):
     ):
         """Update the best codes on the disk."""
         new_entry = pandas.DataFrame({
+            "search": search_method,
             "objective": objective_function,
             "code": [best_code],
             "cost": objective_cost,

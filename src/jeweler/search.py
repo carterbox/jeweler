@@ -131,6 +131,7 @@ def lyndon(
                     score_best = scores[best]
                     code_best = batch[best].astype('int', copy=False)
                     f.update(
+                        'lyndon',
                         objective_function.__name__,
                         code_best,
                         score_best,
@@ -210,6 +211,7 @@ def exhaustive(
                     score_best = scores[best]
                     code_best = batch[best].astype('int', copy=False)
                     f.update(
+                        'exhaustive',
                         objective_function.__name__,
                         code_best,
                         score_best,
@@ -280,6 +282,7 @@ def random(
                     score_best = scores[best]
                     code_best = batch[best].astype('int', copy=False)
                     f.update(
+                        'random',
                         objective_function.__name__,
                         code_best,
                         score_best,
