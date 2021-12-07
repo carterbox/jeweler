@@ -13,14 +13,13 @@ The following transformations are not redundant:
 
 import itertools
 import logging
-import os
+import time
 
 import numpy as np
 from numpy.random import default_rng
 from sage.all import LyndonWords
 from tqdm import tqdm
 
-from jeweler.bracelet import bracelet_fc
 from jeweler.io import ArchiverPandas
 
 __all__ = [
@@ -106,6 +105,7 @@ def lyndon(
     logger.info(f"code density is {density:g}.")
 
     for length in range(K, L + 1):
+        before = time.time()
         with ArchiverPandas(output_dir=output_dir, L=length) as f:
             weight = int(length * density)  # number of 1s in the code
             batch_size = max(1, batch_bits // length)
@@ -143,6 +143,8 @@ def lyndon(
                         weight=weight,
                         progress=progress,
                     )
+        after = time.time()
+        logger.info(f"This search took {after - before:.3e} seconds.")
 
 
 def _exhaustive_batch(batch_size, length, weight):
@@ -190,6 +192,7 @@ def exhaustive(
     logger.info(f"code density is {density:g}.")
 
     for length in range(K, L + 1):
+        before = time.time()
         with ArchiverPandas(output_dir=output_dir, L=length) as f:
             weight = int(length * density)  # number of 1s in the code
             batch_size = max(1, batch_bits // length)
@@ -228,6 +231,8 @@ def exhaustive(
                         weight=weight,
                         progress=progress,
                     )
+        after = time.time()
+        logger.info(f"This search took {after - before:.3e} seconds.")
 
 
 def _random_batch(batch_size, L, k, num_batch):
@@ -270,6 +275,7 @@ def random(
     logger.info(f"code density is {density:g}.")
 
     for length in range(K, L + 1):
+        before = time.time()
         with ArchiverPandas(output_dir=output_dir, L=length) as f:
             weight = int(length * density)  # number of 1s in the code
             batch_size = max(1, batch_bits // length)
@@ -279,7 +285,12 @@ def random(
                 weight,
             )
 
-            number_of_batches = length * length
+            ncodes = (np.math.factorial(length) //
+                      (np.math.factorial(weight) *
+                       np.math.factorial(length - weight))) // 10
+            number_of_batches = (ncodes // batch_size +
+                                 1 if batch_size < ncodes
+                                 or ncodes % batch_size > 0 else 0)
             for batch in tqdm(
                     _random_batch(batch_size, length, weight,
                                   number_of_batches),
@@ -301,3 +312,5 @@ def random(
                         weight=weight,
                         progress=progress,
                     )
+        after = time.time()
+        logger.info(f"This search took {after - before:.3e} seconds.")

@@ -2,7 +2,6 @@
 
 import logging
 import os
-import time
 
 import click
 
@@ -10,11 +9,6 @@ import jeweler.catalog
 import jeweler.objective
 import jeweler.search
 
-logging.basicConfig(
-    format='%(asctime)s %(levelname)s %(message)s',
-    level=logging.INFO,
-    datefmt='%Y-%m-%d %H:%M:%S',
-)
 logger = logging.getLogger(__name__)
 
 
@@ -36,18 +30,33 @@ logger = logging.getLogger(__name__)
               default=jeweler.objective.__all__[0],
               type=click.Choice(jeweler.objective.__all__),
               help='Use this function to score codes.')
-def cli(length_min, length_max, output_dir, search_method, objective_function):
+@click.option('-l',
+              '--log',
+              default=None,
+              type=click.Path(),
+              help='Write logs to this file instead of the terminal.')
+def cli(
+    length_min,
+    length_max,
+    output_dir,
+    search_method,
+    objective_function,
+    log,
+):
     """Find the best binary sequences LENGTH_MIN..LENGTH_MAX.
 
     Save the best sequence for each length in a unique file named
     LENGTH.json. Restart previous searches from the best code on file.
     """
-    before = time.time()
+    logging.basicConfig(
+        format='%(asctime)s %(levelname)s %(message)s',
+        level=logging.INFO,
+        datefmt='%Y-%m-%d %H:%M:%S',
+        filename=log,
+    )
     getattr(jeweler.search, search_method)(
         length_min,
         length_max,
         output_dir=output_dir,
         objective_function=getattr(jeweler.objective, objective_function),
     )
-    after = time.time()
-    logger.info(f"This search took {after - before:.3e} seconds.")
