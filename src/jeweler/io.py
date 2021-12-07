@@ -254,6 +254,6 @@ class ArchiverPandas(object):
                               & (table["search"] == search_method)]
                 best = table.loc[table['cost'].idxmax()]
                 return best["code"], best["cost"], best["progress"]
-            except ValueError:
+            except (ValueError, KeyError):
                 pass
         return None, -np.inf, 0
