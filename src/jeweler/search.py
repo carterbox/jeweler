@@ -132,17 +132,14 @@ def lyndon(
                     continue
                 scores = objective_function(batch)
                 best = np.argmax(scores)
-                if scores[best] > score_best:
-                    score_best = scores[best]
-                    code_best = batch[best].astype('int', copy=False)
-                    f.update(
-                        'lyndon',
-                        objective_function.__name__,
-                        code_best,
-                        score_best,
-                        weight=weight,
-                        progress=progress,
-                    )
+                f.update(
+                    'lyndon',
+                    objective_function.__name__,
+                    best_code=batch[best].astype('int', copy=False),
+                    objective_cost=scores[best],
+                    weight=weight,
+                    progress=progress,
+                )
         after = time.time()
         logger.info(f"This search took {after - before:.3e} seconds.")
 
@@ -196,7 +193,7 @@ def exhaustive(
         with ArchiverPandas(output_dir=output_dir, L=length) as f:
             weight = int(length * density)  # number of 1s in the code
             batch_size = max(1, batch_bits // length)
-            code_best, score_best, progress_best = f.fetch(
+            _, _, progress_best = f.fetch(
                 'exhaustive',
                 objective_function.__name__,
                 weight,
@@ -220,17 +217,14 @@ def exhaustive(
                     continue
                 scores = objective_function(batch)
                 best = np.argmax(scores)
-                if scores[best] > score_best:
-                    score_best = scores[best]
-                    code_best = batch[best].astype('int', copy=False)
-                    f.update(
-                        'exhaustive',
-                        objective_function.__name__,
-                        code_best,
-                        score_best,
-                        weight=weight,
-                        progress=progress,
-                    )
+                f.update(
+                    'exhaustive',
+                    objective_function.__name__,
+                    best_code=batch[best].astype('int', copy=False),
+                    objective_cost=scores[best],
+                    weight=weight,
+                    progress=progress,
+                )
         after = time.time()
         logger.info(f"This search took {after - before:.3e} seconds.")
 
@@ -279,7 +273,7 @@ def random(
         with ArchiverPandas(output_dir=output_dir, L=length) as f:
             weight = int(length * density)  # number of 1s in the code
             batch_size = max(1, batch_bits // length)
-            code_best, score_best, progress = f.fetch(
+            _, _, progress = f.fetch(
                 'random',
                 objective_function.__name__,
                 weight,
@@ -301,16 +295,13 @@ def random(
                 scores = objective_function(batch)
                 best = np.argmax(scores)
                 progress += len(scores)
-                if scores[best] > score_best:
-                    score_best = scores[best]
-                    code_best = batch[best].astype('int', copy=False)
-                    f.update(
-                        'random',
-                        objective_function.__name__,
-                        code_best,
-                        score_best,
-                        weight=weight,
-                        progress=progress,
-                    )
+                f.update(
+                    'random',
+                    objective_function.__name__,
+                    best_code=batch[best].astype('int', copy=False),
+                    objective_cost=scores[best],
+                    weight=weight,
+                    progress=progress,
+                )
         after = time.time()
         logger.info(f"This search took {after - before:.3e} seconds.")
