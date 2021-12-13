@@ -4,6 +4,7 @@ import fcntl
 import json
 import logging
 import os
+import time
 
 import pandas
 import numpy as np
@@ -177,11 +178,21 @@ class ArchiverPandas(object):
         else:
             raise ValueError("L must be a positive integer!")
         self.filename = os.path.join(self.output_dir, f"{self.L}.json")
+        self.last_write = None
+        self._needs_dump = False
 
     def __enter__(self):
+        self.last_write = time.time()
+        self.best_cost = -np.inf
+        self._needs_dump = False
         return self
 
     def __exit__(self, *args):
+        self.__dump__()
+
+    def __dump__(self):
+        self.last_write = time.time()
+        self._needs_dump = False
         if os.path.isfile(self.filename):
             already_exists = True
             mode = 'r+'
@@ -224,19 +235,24 @@ class ArchiverPandas(object):
         progress=0,
     ):
         """Update the best codes on the disk."""
-        new_entry = pandas.DataFrame({
-            "search": search_method,
-            "objective": objective_function,
-            "code": [best_code],
-            "cost": objective_cost,
-            "weight": weight,
-            "progress": progress,
-        })
-        self.table = self.table.append(
-            new_entry,
-            ignore_index=True,
-            verify_integrity=True,
-        )
+        if objective_cost > self.best_cost:
+            self._needs_dump = True
+            new_entry = pandas.DataFrame({
+                "search": search_method,
+                "objective": objective_function,
+                "code": [best_code],
+                "cost": objective_cost,
+                "weight": weight,
+                "progress": progress,
+            })
+            self.table = self.table.append(
+                new_entry,
+                ignore_index=True,
+                verify_integrity=True,
+            )
+        if self._needs_dump and ((time.time() - self.last_write) > 1860):
+            # Dump to file every 31 minutes
+            self.__dump__()
 
     def fetch(
         self,
@@ -253,6 +269,7 @@ class ArchiverPandas(object):
                               & (table["weight"] == weight)
                               & (table["search"] == search_method)]
                 best = table.loc[table['cost'].idxmax()]
+                self.best_cost = best["cost"]
                 return best["code"], best["cost"], best["progress"]
             except (ValueError, KeyError):
                 pass
