@@ -236,6 +236,7 @@ class ArchiverPandas(object):
     ):
         """Update the best codes on the disk."""
         if objective_cost > self.best_cost:
+            self.best_cost = objective_cost
             self._needs_dump = True
             new_entry = pandas.DataFrame({
                 "search": search_method,
