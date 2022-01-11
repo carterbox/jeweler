@@ -41,7 +41,7 @@ logger = logging.getLogger(__name__)
               type=click.FLOAT,
               help='Fraction of bits that are one.')
 @click.option('--verbose-archive/--no-verbose-archive',
-              default=True,
+              default=False,
               help='Record best from all batches or only when a new best code is found.')
 def cli(
     length_min,

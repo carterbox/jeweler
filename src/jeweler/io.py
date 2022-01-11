@@ -211,12 +211,14 @@ class ArchiverPandas(object):
                     verify_integrity=True,
                 )
             self.table = self.table.round({"cost": 6})
+            duplicate_keys = [
+                "objective",
+                "weight",
+            ]
+            if self.verbose_archive:
+                duplicate_keys.append("progress")
             self.table.drop_duplicates(
-                subset=[
-                    "objective",
-                    "weight",
-                    "progress",
-                ],
+                subset=duplicate_keys,
                 keep='last',
                 inplace=True,
             )

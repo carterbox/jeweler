@@ -1,4 +1,4 @@
-from skbuild import setup
+from setuptools import setup
 
 setup(
     name="jeweler",
@@ -8,6 +8,8 @@ setup(
     install_requires=[
         'click',
         'numpy',
+        'pandas',
+        'sage',
         'tqdm',
     ],
     python_requires='>=3.6',
