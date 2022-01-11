@@ -167,7 +167,7 @@ class ArchiverPandas(object):
     filename : str
         The name of the file where the codes will be stored.
     """
-    def __init__(self, output_dir: str, L: int):
+    def __init__(self, output_dir: str, L: int, verbose_archive: bool):
         """Set up an Archiver instance."""
         self.output_dir = os.path.abspath(output_dir)
         # Create the file if it doesn't already exist
@@ -180,6 +180,7 @@ class ArchiverPandas(object):
         self.filename = os.path.join(self.output_dir, f"{self.L}.json")
         self.last_write = None
         self._needs_dump = False
+        self.verbose_archive = verbose_archive
 
     def __enter__(self):
         self.last_write = time.time()
@@ -235,7 +236,7 @@ class ArchiverPandas(object):
         progress=0,
     ):
         """Update the best codes on the disk."""
-        if objective_cost > self.best_cost:
+        if objective_cost > self.best_cost or self.verbose_archive:
             self.best_cost = objective_cost
             self._needs_dump = True
             new_entry = pandas.DataFrame({

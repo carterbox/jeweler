@@ -35,6 +35,14 @@ logger = logging.getLogger(__name__)
               default=None,
               type=click.Path(),
               help='Write logs to this file instead of the terminal.')
+@click.option('-d',
+              '--density',
+              default=0.5,
+              type=click.FLOAT,
+              help='Fraction of bits that are one.')
+@click.option('--verbose-archive/--no-verbose-archive',
+              default=True,
+              help='Record best from all batches or only when a new best code is found.')
 def cli(
     length_min,
     length_max,
@@ -42,6 +50,8 @@ def cli(
     search_method,
     objective_function,
     log,
+    density,
+    verbose_archive,
 ):
     """Find the best binary sequences LENGTH_MIN..LENGTH_MAX.
 
@@ -59,4 +69,6 @@ def cli(
         length_max,
         output_dir=output_dir,
         objective_function=getattr(jeweler.objective, objective_function),
+        density=density,
+        verbose_archive=verbose_archive,
     )

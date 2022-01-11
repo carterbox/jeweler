@@ -82,6 +82,7 @@ def lyndon(
     objective_function,
     density=0.5,
     batch_bits=4096,
+    verbose_archive=False,
 ):
     """Search lyndon words of length L and fixed content for the best binary code.
 
@@ -106,7 +107,11 @@ def lyndon(
 
     for length in range(K, L + 1):
         before = time.time()
-        with ArchiverPandas(output_dir=output_dir, L=length) as f:
+        with ArchiverPandas(
+                output_dir=output_dir,
+                L=length,
+                verbose_archive=verbose_archive,
+        ) as f:
             weight = int(length * density)  # number of 1s in the code
             batch_size = max(1, batch_bits // length)
             code_best, score_best, progress_best = f.fetch(
@@ -166,6 +171,7 @@ def exhaustive(
     objective_function,
     density=0.5,
     batch_bits=4096,
+    verbose_archive=False,
 ):
     """Find the best binary code of length L using a brute force search.
 
@@ -190,7 +196,11 @@ def exhaustive(
 
     for length in range(K, L + 1):
         before = time.time()
-        with ArchiverPandas(output_dir=output_dir, L=length) as f:
+        with ArchiverPandas(
+                output_dir=output_dir,
+                L=length,
+                verbose_archive=verbose_archive,
+        ) as f:
             weight = int(length * density)  # number of 1s in the code
             batch_size = max(1, batch_bits // length)
             _, _, progress_best = f.fetch(
@@ -246,6 +256,7 @@ def random(
     objective_function,
     density=0.5,
     batch_bits=4096,
+    verbose_archive=False,
 ):
     """Find the best binary code of length L using a random search.
 
@@ -270,7 +281,11 @@ def random(
 
     for length in range(K, L + 1):
         before = time.time()
-        with ArchiverPandas(output_dir=output_dir, L=length) as f:
+        with ArchiverPandas(
+                output_dir=output_dir,
+                L=length,
+                verbose_archive=verbose_archive,
+        ) as f:
             weight = int(length * density)  # number of 1s in the code
             batch_size = max(1, batch_bits // length)
             _, _, progress = f.fetch(
