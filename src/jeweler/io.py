@@ -1,29 +1,13 @@
-"""Provides an interface for writing best codes to the disk.
-
-Data is stored as a JSON in the following format:
-
-```json
-{
-    2: {  # the code weight
-        "minimal_variance" : {  # the objective function
-            "code" : [0, 1, 0, 0, 1],
-            "cost" : -145641.4124,
-        },
-        "spectral_flatness" : {
-            "code" : [0, 1, 0, 0, 1],
-            "cost" : -145641.4124,
-        }
-    }
-}
-```
-"""
+"""Provides an interface for writing best codes to the disk."""
 
 import fcntl
 import json
 import logging
 import os
+import time
 
 import pandas
+import numpy as np
 
 all = ['Archiver', 'ArchiverPandas']
 
@@ -40,6 +24,23 @@ class NotInCatalogError(ValueError):
 
 class Archiver(object):
     """Manages code records for competing disk writes.
+
+    Data is stored as a JSON in the following format:
+
+    ```json
+    {
+        2: {  # the code weight
+            "minimal_variance" : {  # the objective function
+                "code" : [0, 1, 0, 0, 1],
+                "cost" : -145641.4124,
+            },
+            "spectral_flatness" : {
+                "code" : [0, 1, 0, 0, 1],
+                "cost" : -145641.4124,
+            }
+        }
+    }
+    ```
 
     Attributes
     ----------
@@ -166,7 +167,7 @@ class ArchiverPandas(object):
     filename : str
         The name of the file where the codes will be stored.
     """
-    def __init__(self, output_dir: str, L: int):
+    def __init__(self, output_dir: str, L: int, verbose_archive: bool):
         """Set up an Archiver instance."""
         self.output_dir = os.path.abspath(output_dir)
         # Create the file if it doesn't already exist
@@ -177,11 +178,22 @@ class ArchiverPandas(object):
         else:
             raise ValueError("L must be a positive integer!")
         self.filename = os.path.join(self.output_dir, f"{self.L}.json")
+        self.last_write = None
+        self._needs_dump = False
+        self.verbose_archive = verbose_archive
 
     def __enter__(self):
+        self.last_write = time.time()
+        self.best_cost = -np.inf
+        self._needs_dump = False
         return self
 
     def __exit__(self, *args):
+        self.__dump__()
+
+    def __dump__(self):
+        self.last_write = time.time()
+        self._needs_dump = False
         if os.path.isfile(self.filename):
             already_exists = True
             mode = 'r+'
@@ -216,6 +228,7 @@ class ArchiverPandas(object):
 
     def update(
         self,
+        search_method: str,
         objective_function: str,
         best_code,
         objective_cost,
@@ -223,28 +236,43 @@ class ArchiverPandas(object):
         progress=0,
     ):
         """Update the best codes on the disk."""
-        new_entry = pandas.DataFrame({
-            "objective": objective_function,
-            "code": [best_code],
-            "cost": objective_cost,
-            "weight": weight,
-            "progress": progress,
-        })
-        self.table = self.table.append(
-            new_entry,
-            ignore_index=True,
-            verify_integrity=True,
-        )
+        if objective_cost > self.best_cost or self.verbose_archive:
+            self.best_cost = objective_cost
+            self._needs_dump = True
+            new_entry = pandas.DataFrame({
+                "search": search_method,
+                "objective": objective_function,
+                "code": [best_code],
+                "cost": objective_cost,
+                "weight": weight,
+                "progress": progress,
+            })
+            self.table = self.table.append(
+                new_entry,
+                ignore_index=True,
+                verify_integrity=True,
+            )
+        if self._needs_dump and ((time.time() - self.last_write) > 1860):
+            # Dump to file every 31 minutes
+            self.__dump__()
 
     def fetch(
         self,
-        L,
-        objective_function,
-        weight,
+        search_method: str,
+        objective_function: str,
+        weight: int,
     ):
         """Get a code and its cost from the disk."""
-        if not os.path.isfile(self.filename):
-            raise NotInCatalogError(L, weight, objective_function)
-        table = pandas.io.json.read_json(self.filename)
-        return table[table["objective"] == objective_function
-                     and table["weight"] == weight]
+        if os.path.isfile(self.filename):
+            with open(self.filename, 'r+') as f:
+                table = pandas.io.json.read_json(f)
+            try:
+                table = table[(table["objective"] == objective_function)
+                              & (table["weight"] == weight)
+                              & (table["search"] == search_method)]
+                best = table.loc[table['cost'].idxmax()]
+                self.best_cost = best["cost"]
+                return best["code"], best["cost"], best["progress"]
+            except (ValueError, KeyError):
+                pass
+        return None, -np.inf, 0
