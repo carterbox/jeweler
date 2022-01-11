@@ -8,6 +8,8 @@ setup(
     install_requires=[
         'click',
         'numpy',
+        'pandas',
+        'sage',
         'tqdm',
     ],
     python_requires='>=3.6',
