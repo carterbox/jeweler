@@ -214,6 +214,7 @@ class ArchiverPandas(object):
             duplicate_keys = [
                 "objective",
                 "weight",
+                "search",
             ]
             if self.verbose_archive:
                 duplicate_keys.append("progress")
